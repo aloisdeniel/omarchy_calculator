@@ -112,7 +112,7 @@ void main() {
   });
 
   test('Constants', () {
-    const commands = [Command.pi(), Command.euler()];
+    final commands = [Command.pi(), Command.euler()];
     const expected = [
       ConstantToken(Constant.pi),
       ConstantToken(Constant.euler),

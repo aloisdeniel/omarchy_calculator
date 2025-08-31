@@ -1,3 +1,5 @@
+import 'package:omarchy_calculator/src/engine/tokenize.dart';
+
 /// Base class for calculator actions.
 sealed class Command {
   const Command();
@@ -35,9 +37,9 @@ sealed class Command {
         case '^':
           commands.add(const Command.power());
         case 'π':
-          commands.add(const Command.pi());
+          commands.add(Command.pi());
         case 'e':
-          commands.add(const Command.euler());
+          commands.add(Command.euler());
         case '%':
           commands.add(const Command.percent());
         case '±':
@@ -54,7 +56,7 @@ sealed class Command {
             'CA': Command.clearAll(),
             'CE': Command.clearEntry(),
             'BS': Command.backspace(),
-            'pi': Command.pi(),
+            'pi': ConstantCommand(Constant.pi),
             'plus': Command.operator(OperatorType.plus),
             'minus': Command.operator(OperatorType.minus),
             'mul': Command.operator(OperatorType.multiply),
@@ -123,9 +125,9 @@ sealed class Command {
 
   const factory Command.tangent() = Tangent;
 
-  const factory Command.pi() = Pi;
+  factory Command.pi() => const ConstantCommand(Constant.pi);
 
-  const factory Command.euler() = Euler;
+  factory Command.euler() => const ConstantCommand(Constant.euler);
 }
 
 class Digit extends Command {
@@ -136,6 +138,15 @@ class Digit extends Command {
   String toString() {
     return value.toString();
   }
+
+  @override
+  bool operator ==(Object other) {
+    if (identical(this, other)) return true;
+    return other is Digit && other.value == value;
+  }
+
+  @override
+  int get hashCode => value.hashCode;
 }
 
 class DecimalPoint extends Command {
@@ -145,6 +156,15 @@ class DecimalPoint extends Command {
   String toString() {
     return '.';
   }
+
+  @override
+  bool operator ==(Object other) {
+    if (identical(this, other)) return true;
+    return other is DecimalPoint;
+  }
+
+  @override
+  int get hashCode => runtimeType.hashCode;
 }
 
 class Operator extends Command {
@@ -161,6 +181,15 @@ class Operator extends Command {
   String toString() {
     return type.toSymbol();
   }
+
+  @override
+  bool operator ==(Object other) {
+    if (identical(this, other)) return true;
+    return other is Operator && other.type == type;
+  }
+
+  @override
+  int get hashCode => type.hashCode;
 }
 
 enum OperatorType {
@@ -193,6 +222,15 @@ class Equals extends Command {
   String toString() {
     return '=';
   }
+
+  @override
+  bool operator ==(Object other) {
+    if (identical(this, other)) return true;
+    return other is Equals;
+  }
+
+  @override
+  int get hashCode => runtimeType.hashCode;
 }
 
 /// Clear everything (AC)
@@ -202,6 +240,15 @@ class ClearAll extends Command {
   String toString() {
     return 'AC';
   }
+
+  @override
+  bool operator ==(Object other) {
+    if (identical(this, other)) return true;
+    return other is ClearAll;
+  }
+
+  @override
+  int get hashCode => runtimeType.hashCode;
 }
 
 /// Clear only the current entry (CE)
@@ -211,6 +258,15 @@ class ClearEntry extends Command {
   String toString() {
     return 'CE';
   }
+
+  @override
+  bool operator ==(Object other) {
+    if (identical(this, other)) return true;
+    return other is ClearEntry;
+  }
+
+  @override
+  int get hashCode => runtimeType.hashCode;
 }
 
 /// Delete last character of the current entry
@@ -221,6 +277,15 @@ class Backspace extends Command {
   String toString() {
     return 'CE';
   }
+
+  @override
+  bool operator ==(Object other) {
+    if (identical(this, other)) return true;
+    return other is Backspace;
+  }
+
+  @override
+  int get hashCode => runtimeType.hashCode;
 }
 
 /// Toggle sign of the current entry (±)
@@ -231,6 +296,15 @@ class ToggleSign extends Command {
   String toString() {
     return '±';
   }
+
+  @override
+  bool operator ==(Object other) {
+    if (identical(this, other)) return true;
+    return other is ToggleSign;
+  }
+
+  @override
+  int get hashCode => runtimeType.hashCode;
 }
 
 /// Convert current entry to a percentage (divide by 100)
@@ -241,6 +315,15 @@ class Percent extends Command {
   String toString() {
     return '%';
   }
+
+  @override
+  bool operator ==(Object other) {
+    if (identical(this, other)) return true;
+    return other is Percent;
+  }
+
+  @override
+  int get hashCode => runtimeType.hashCode;
 }
 
 /// Calculate square root of the current entry
@@ -251,6 +334,15 @@ class SquareRoot extends Command {
   String toString() {
     return '√';
   }
+
+  @override
+  bool operator ==(Object other) {
+    if (identical(this, other)) return true;
+    return other is SquareRoot;
+  }
+
+  @override
+  int get hashCode => runtimeType.hashCode;
 }
 
 /// Calculate square of the current entry
@@ -261,6 +353,15 @@ class Square extends Command {
   String toString() {
     return 'x²';
   }
+
+  @override
+  bool operator ==(Object other) {
+    if (identical(this, other)) return true;
+    return other is Square;
+  }
+
+  @override
+  int get hashCode => runtimeType.hashCode;
 }
 
 /// Memory operations
@@ -276,6 +377,15 @@ class MemoryAdd extends Memory {
   String toString() {
     return 'M+';
   }
+
+  @override
+  bool operator ==(Object other) {
+    if (identical(this, other)) return true;
+    return other is MemoryAdd;
+  }
+
+  @override
+  int get hashCode => runtimeType.hashCode;
 }
 
 /// Memory subtract (M-)
@@ -286,6 +396,15 @@ class MemorySubtract extends Memory {
   String toString() {
     return 'M-';
   }
+
+  @override
+  bool operator ==(Object other) {
+    if (identical(this, other)) return true;
+    return other is MemorySubtract;
+  }
+
+  @override
+  int get hashCode => runtimeType.hashCode;
 }
 
 /// Memory recall (MR)
@@ -296,6 +415,15 @@ class MemoryRecall extends Memory {
   String toString() {
     return 'MR';
   }
+
+  @override
+  bool operator ==(Object other) {
+    if (identical(this, other)) return true;
+    return other is MemoryRecall;
+  }
+
+  @override
+  int get hashCode => runtimeType.hashCode;
 }
 
 /// Memory clear (MC)
@@ -306,6 +434,15 @@ class MemoryClear extends Memory {
   String toString() {
     return 'MC';
   }
+
+  @override
+  bool operator ==(Object other) {
+    if (identical(this, other)) return true;
+    return other is MemoryClear;
+  }
+
+  @override
+  int get hashCode => runtimeType.hashCode;
 }
 
 /// Power operation (x^y)
@@ -316,6 +453,15 @@ class Power extends Command {
   String toString() {
     return 'x^y';
   }
+
+  @override
+  bool operator ==(Object other) {
+    if (identical(this, other)) return true;
+    return other is Power;
+  }
+
+  @override
+  int get hashCode => runtimeType.hashCode;
 }
 
 /// Open parenthesis
@@ -326,6 +472,15 @@ class OpenParenthesis extends Command {
   String toString() {
     return '(';
   }
+
+  @override
+  bool operator ==(Object other) {
+    if (identical(this, other)) return true;
+    return other is OpenParenthesis;
+  }
+
+  @override
+  int get hashCode => runtimeType.hashCode;
 }
 
 /// Close parenthesis
@@ -336,6 +491,15 @@ class CloseParenthesis extends Command {
   String toString() {
     return ')';
   }
+
+  @override
+  bool operator ==(Object other) {
+    if (identical(this, other)) return true;
+    return other is CloseParenthesis;
+  }
+
+  @override
+  int get hashCode => runtimeType.hashCode;
 }
 
 /// Trigonometric operations
@@ -351,6 +515,15 @@ class Sine extends Trigonometric {
   String toString() {
     return 'sin';
   }
+
+  @override
+  bool operator ==(Object other) {
+    if (identical(this, other)) return true;
+    return other is Sine;
+  }
+
+  @override
+  int get hashCode => runtimeType.hashCode;
 }
 
 /// Cosine function
@@ -361,6 +534,15 @@ class Cosine extends Trigonometric {
   String toString() {
     return 'cos';
   }
+
+  @override
+  bool operator ==(Object other) {
+    if (identical(this, other)) return true;
+    return other is Cosine;
+  }
+
+  @override
+  int get hashCode => runtimeType.hashCode;
 }
 
 /// Tangent function
@@ -371,24 +553,34 @@ class Tangent extends Trigonometric {
   String toString() {
     return 'tan';
   }
+
+  @override
+  bool operator ==(Object other) {
+    if (identical(this, other)) return true;
+    return other is Tangent;
+  }
+
+  @override
+  int get hashCode => runtimeType.hashCode;
 }
 
 /// Pi constant (π)
-class Pi extends Command {
-  const Pi();
+class ConstantCommand extends Command {
+  const ConstantCommand(this.constant);
+
+  final Constant constant;
 
   @override
   String toString() {
     return 'π';
   }
-}
-
-/// Euler's number (e)
-class Euler extends Command {
-  const Euler();
 
   @override
-  String toString() {
-    return 'e';
+  bool operator ==(Object other) {
+    if (identical(this, other)) return true;
+    return other is ConstantCommand && other.constant == constant;
   }
+
+  @override
+  int get hashCode => runtimeType.hashCode;
 }
