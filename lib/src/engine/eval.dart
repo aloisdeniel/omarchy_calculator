@@ -34,6 +34,8 @@ Expression evalPreviousExpressions(Expression expression) {
       return UnaryExpression(operator, evalPreviousExpressions(operand));
     case FunctionExpression(:final function, :final argument):
       return FunctionExpression(function, evalPreviousExpressions(argument));
+    case ParenthesisGroupExpression(:final expression):
+      return ParenthesisGroupExpression(evalPreviousExpressions(expression));
     case EmptyExpression():
     case ConstantExpression():
     case NumberExpression():
@@ -119,6 +121,9 @@ EvalResult _evaluateExpression(Expression expression) {
             );
           }
       }
+
+    case ParenthesisGroupExpression(:final expression):
+      return _evaluateExpression(expression);
 
     case FunctionExpression(function: final function, argument: final argument):
       final argumentResult = _evaluateExpression(argument);

@@ -216,10 +216,12 @@ void main() {
       expected: BinaryExpression(
         BinaryOperator.multiply,
         NumberExpression(Decimal.fromInt(2)),
-        BinaryExpression(
-          BinaryOperator.add,
-          NumberExpression(Decimal.fromInt(3)),
-          NumberExpression(Decimal.fromInt(4)),
+        ParenthesisGroupExpression(
+          BinaryExpression(
+            BinaryOperator.add,
+            NumberExpression(Decimal.fromInt(3)),
+            NumberExpression(Decimal.fromInt(4)),
+          ),
         ),
       ),
     );
@@ -478,10 +480,12 @@ void main() {
       ],
       expected: BinaryExpression(
         BinaryOperator.multiply,
-        BinaryExpression(
-          BinaryOperator.add,
-          NumberExpression(Decimal.fromInt(2)),
-          NumberExpression(Decimal.fromInt(3)),
+        ParenthesisGroupExpression(
+          BinaryExpression(
+            BinaryOperator.add,
+            NumberExpression(Decimal.fromInt(2)),
+            NumberExpression(Decimal.fromInt(3)),
+          ),
         ),
         NumberExpression(Decimal.fromInt(4)),
       ),
@@ -503,14 +507,18 @@ void main() {
       ],
       expected: BinaryExpression(
         BinaryOperator.subtract,
-        BinaryExpression(
-          BinaryOperator.multiply,
+        ParenthesisGroupExpression(
           BinaryExpression(
-            BinaryOperator.add,
-            NumberExpression(Decimal.fromInt(2)),
-            NumberExpression(Decimal.fromInt(3)),
+            BinaryOperator.multiply,
+            ParenthesisGroupExpression(
+              BinaryExpression(
+                BinaryOperator.add,
+                NumberExpression(Decimal.fromInt(2)),
+                NumberExpression(Decimal.fromInt(3)),
+              ),
+            ),
+            NumberExpression(Decimal.fromInt(4)),
           ),
-          NumberExpression(Decimal.fromInt(4)),
         ),
         NumberExpression(Decimal.fromInt(1)),
       ),
@@ -532,15 +540,19 @@ void main() {
       ],
       expected: BinaryExpression(
         BinaryOperator.multiply,
-        BinaryExpression(
-          BinaryOperator.subtract,
-          NumberExpression(Decimal.fromInt(5)),
-          NumberExpression(Decimal.fromInt(2)),
+        ParenthesisGroupExpression(
+          BinaryExpression(
+            BinaryOperator.subtract,
+            NumberExpression(Decimal.fromInt(5)),
+            NumberExpression(Decimal.fromInt(2)),
+          ),
         ),
-        BinaryExpression(
-          BinaryOperator.add,
-          NumberExpression(Decimal.fromInt(3)),
-          NumberExpression(Decimal.fromInt(1)),
+        ParenthesisGroupExpression(
+          BinaryExpression(
+            BinaryOperator.add,
+            NumberExpression(Decimal.fromInt(3)),
+            NumberExpression(Decimal.fromInt(1)),
+          ),
         ),
       ),
     );
@@ -557,10 +569,12 @@ void main() {
       ],
       expected: BinaryExpression(
         BinaryOperator.power,
-        BinaryExpression(
-          BinaryOperator.add,
-          NumberExpression(Decimal.fromInt(2)),
-          NumberExpression(Decimal.fromInt(3)),
+        ParenthesisGroupExpression(
+          BinaryExpression(
+            BinaryOperator.add,
+            NumberExpression(Decimal.fromInt(2)),
+            NumberExpression(Decimal.fromInt(3)),
+          ),
         ),
         NumberExpression(Decimal.fromInt(2)),
       ),
@@ -649,10 +663,12 @@ void main() {
       ],
       expected: BinaryExpression(
         BinaryOperator.divide,
-        BinaryExpression(
-          BinaryOperator.add,
-          ConstantExpression(Constant.pi),
-          ConstantExpression(Constant.euler),
+        ParenthesisGroupExpression(
+          BinaryExpression(
+            BinaryOperator.add,
+            ConstantExpression(Constant.pi),
+            ConstantExpression(Constant.euler),
+          ),
         ),
         NumberExpression(Decimal.fromInt(2)),
       ),
@@ -849,10 +865,12 @@ void main() {
       ],
       expected: FunctionExpression(
         MathFunction.sin,
-        BinaryExpression(
-          BinaryOperator.add,
-          NumberExpression(Decimal.fromInt(30)),
-          NumberExpression(Decimal.fromInt(15)),
+        ParenthesisGroupExpression(
+          BinaryExpression(
+            BinaryOperator.add,
+            NumberExpression(Decimal.fromInt(30)),
+            NumberExpression(Decimal.fromInt(15)),
+          ),
         ),
       ),
     );
@@ -868,10 +886,12 @@ void main() {
       ],
       expected: FunctionExpression(
         MathFunction.cos,
-        BinaryExpression(
-          BinaryOperator.divide,
-          NumberExpression(Decimal.fromInt(60)),
-          NumberExpression(Decimal.fromInt(2)),
+        ParenthesisGroupExpression(
+          BinaryExpression(
+            BinaryOperator.divide,
+            NumberExpression(Decimal.fromInt(60)),
+            NumberExpression(Decimal.fromInt(2)),
+          ),
         ),
       ),
     );
@@ -1018,10 +1038,12 @@ void main() {
       ],
       expected: UnaryExpression(
         UnaryOperator.negate,
-        BinaryExpression(
-          BinaryOperator.add,
-          NumberExpression(Decimal.fromInt(5)),
-          NumberExpression(Decimal.fromInt(3)),
+        ParenthesisGroupExpression(
+          BinaryExpression(
+            BinaryOperator.add,
+            NumberExpression(Decimal.fromInt(5)),
+            NumberExpression(Decimal.fromInt(3)),
+          ),
         ),
       ),
     );
@@ -1097,10 +1119,12 @@ void main() {
         NumberExpression(Decimal.fromInt(1000)),
         BinaryExpression(
           BinaryOperator.power,
-          BinaryExpression(
-            BinaryOperator.add,
-            NumberExpression(Decimal.fromInt(1)),
-            NumberExpression(Decimal.parse('0.05')),
+          ParenthesisGroupExpression(
+            BinaryExpression(
+              BinaryOperator.add,
+              NumberExpression(Decimal.fromInt(1)),
+              NumberExpression(Decimal.parse('0.05')),
+            ),
           ),
           NumberExpression(Decimal.fromInt(10)),
         ),
@@ -1183,10 +1207,12 @@ void main() {
         BinaryOperator.divide,
         BinaryExpression(
           BinaryOperator.multiply,
-          BinaryExpression(
-            BinaryOperator.subtract,
-            NumberExpression(Decimal.fromInt(32)),
-            NumberExpression(Decimal.fromInt(32)),
+          ParenthesisGroupExpression(
+            BinaryExpression(
+              BinaryOperator.subtract,
+              NumberExpression(Decimal.fromInt(32)),
+              NumberExpression(Decimal.fromInt(32)),
+            ),
           ),
           NumberExpression(Decimal.fromInt(5)),
         ),
@@ -1209,13 +1235,15 @@ void main() {
       expected: BinaryExpression(
         BinaryOperator.power,
         NumberExpression(Decimal.fromInt(10)),
-        BinaryExpression(
-          BinaryOperator.add,
-          NumberExpression(Decimal.fromInt(2)),
+        ParenthesisGroupExpression(
           BinaryExpression(
-            BinaryOperator.multiply,
-            NumberExpression(Decimal.fromInt(3)),
-            NumberExpression(Decimal.parse('0.5')),
+            BinaryOperator.add,
+            NumberExpression(Decimal.fromInt(2)),
+            BinaryExpression(
+              BinaryOperator.multiply,
+              NumberExpression(Decimal.fromInt(3)),
+              NumberExpression(Decimal.parse('0.5')),
+            ),
           ),
         ),
       ),
@@ -1258,7 +1286,9 @@ void main() {
         NumberToken('42'),
         ParenthesisToken.close(),
       ],
-      expected: NumberExpression(Decimal.fromInt(42)),
+      expected: ParenthesisGroupExpression(
+        NumberExpression(Decimal.fromInt(42)),
+      ),
     );
 
     testParse(
@@ -1269,7 +1299,11 @@ void main() {
         ParenthesisToken.close(),
         ParenthesisToken.close(),
       ],
-      expected: ConstantExpression(Constant.pi),
+      expected: ParenthesisGroupExpression(
+        ParenthesisGroupExpression(
+          ConstantExpression(Constant.pi),
+        ),
+      ),
     );
 
     testParse(
@@ -1281,7 +1315,9 @@ void main() {
       ],
       expected: FunctionExpression(
         MathFunction.square,
-        ConstantExpression(Constant.euler),
+        ParenthesisGroupExpression(
+          ConstantExpression(Constant.euler),
+        ),
       ),
     );
 
@@ -1303,22 +1339,24 @@ void main() {
       ],
       expected: BinaryExpression(
         BinaryOperator.subtract,
-        BinaryExpression(
-          BinaryOperator.power,
           BinaryExpression(
-            BinaryOperator.add,
-            BinaryExpression(
-              BinaryOperator.multiply,
-              NumberExpression(Decimal.fromInt(2)),
-              ConstantExpression(Constant.pi),
+            BinaryOperator.power,
+            ParenthesisGroupExpression(
+              BinaryExpression(
+                BinaryOperator.add,
+                BinaryExpression(
+                  BinaryOperator.multiply,
+                  NumberExpression(Decimal.fromInt(2)),
+                  ConstantExpression(Constant.pi),
+                ),
+                FunctionExpression(
+                  MathFunction.square,
+                  NumberExpression(Decimal.fromInt(3)),
+                ),
+              ),
             ),
-            FunctionExpression(
-              MathFunction.square,
-              NumberExpression(Decimal.fromInt(3)),
-            ),
+            NumberExpression(Decimal.fromInt(2)),
           ),
-          NumberExpression(Decimal.fromInt(2)),
-        ),
         FunctionExpression(
           MathFunction.squareRoot,
           NumberExpression(Decimal.fromInt(10)),

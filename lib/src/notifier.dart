@@ -5,6 +5,7 @@ import 'package:omarchy_calculator/src/engine/eval.dart';
 import 'package:omarchy_calculator/src/engine/parse.dart';
 import 'package:omarchy_calculator/src/engine/tokenize.dart';
 import 'package:omarchy_calculator/src/engine/input.dart' as ei;
+import 'package:omarchy_calculator/src/utils/expression_printer.dart';
 
 class CalculatorState {
   CalculatorState({
@@ -15,6 +16,7 @@ class CalculatorState {
     required this.expression,
     required this.result,
     required this.dateTime,
+    required this.isResult,
   });
 
   factory CalculatorState.empty({int id = 0, Decimal? result}) =>
@@ -23,6 +25,7 @@ class CalculatorState {
         commands: [],
         tokens: [],
         input: '',
+        isResult: false,
         expression: const EmptyExpression(),
         result: SuccessEval(EmptyExpression(), result ?? Decimal.zero),
         dateTime: DateTime.now(),
@@ -35,6 +38,20 @@ class CalculatorState {
   final EvalResult result;
   final DateTime dateTime;
   final String input;
+  final bool isResult;
+
+  CalculatorState copyWith({int? id, String? input}) {
+    return CalculatorState(
+      id: id ?? this.id,
+      input: input ?? this.input,
+      tokens: tokens,
+      expression: expression,
+      result: result,
+      dateTime: dateTime,
+      isResult: isResult,
+      commands: commands,
+    );
+  }
 }
 
 class CalculatorNotifier extends ChangeNotifier {
@@ -50,36 +67,57 @@ class CalculatorNotifier extends ChangeNotifier {
 
   void execute(Command action) {
     if (action is ClearAll) {
-      _current.add(CalculatorState.empty(id: state.id + 1));
+      final newId = state.id + 1;
+      _current.clear();
+      _current.add(CalculatorState.empty(id: newId));
       notifyListeners();
       return;
     }
-    final commands = [...state.commands, action];
-    var tokens = tokenize(commands);
-    final rawExpression = parse(tokens);
-    final expression = evalPreviousExpressions(rawExpression);
-    final result = eval(expression);
-    final input = ei.input(tokens);
+    try {
+      final isResult = action is Equals;
+      final commands = [...state.commands, action];
+      var tokens = tokenize(commands);
+      final rawExpression = parse(tokens);
+      final expression = evalPreviousExpressions(rawExpression);
+      final result = eval(expression);
+      final input = ei.input(tokens);
 
-    final newState = CalculatorState(
-      id: state.id + 1,
-      commands: commands,
-      input: input,
-      tokens: tokens,
-      expression: expression,
-      result: result,
-      dateTime: DateTime.now(),
-    );
-    _current.add(newState);
-    if (action is Equals) {
-      _history.insert(0, newState);
+      print(printExpression(expression));
+
+      final newState = CalculatorState(
+        id: state.id + 1,
+        commands: commands,
+        input: input,
+        tokens: tokens,
+        isResult: isResult,
+        expression: expression,
+        result: result,
+        dateTime: DateTime.now(),
+      );
+
+      if (isResult) {
+        _current.clear();
+        _history.insert(0, newState);
+      }
+
+      _current.add(newState);
+
+      notifyListeners();
+    } catch (e) {
+      // if any error occurs, we just ignore the action
+      print('Error executing action: $e');
     }
-
-    notifyListeners();
   }
 
   void clearHistory() {
     _history.clear();
+    notifyListeners();
+  }
+
+  void restore(CalculatorState state) {
+    final newId = this.state.id + 1;
+    _current.clear();
+    _current.add(state.copyWith(id: newId, input: ''));
     notifyListeners();
   }
 }

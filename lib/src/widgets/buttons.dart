@@ -1,5 +1,6 @@
 import 'package:omarchy_calculator/src/engine/command.dart';
 import 'package:flutter_omarchy/flutter_omarchy.dart';
+import 'package:omarchy_calculator/src/engine/tokenize.dart';
 
 class ButtonGrid extends StatelessWidget {
   const ButtonGrid({
@@ -52,8 +53,8 @@ class ButtonGrid extends StatelessWidget {
       Operator.plus(),
     ],
     [
-      Pi(),
-      Euler(),
+      ConstantCommand(Constant.pi),
+      ConstantCommand(Constant.euler),
       SquareRoot(),
       ToggleSign(),
       Digit(0),
@@ -108,8 +109,7 @@ class CalculatorButton extends StatelessWidget {
     SquareRoot() => AnsiColor.cyan,
     Square() => AnsiColor.cyan,
     Power() => AnsiColor.cyan,
-    Pi() => AnsiColor.cyan,
-    Euler() => AnsiColor.cyan,
+    ConstantCommand() => AnsiColor.cyan,
     OpenParenthesis() => AnsiColor.blue,
     CloseParenthesis() => AnsiColor.blue,
     Trigonometric() => AnsiColor.cyan,

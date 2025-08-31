@@ -237,6 +237,59 @@ void main() {
     });
   });
 
+  group('Parenthesis Group Expressions', () {
+    test('Simple parenthesis group', () {
+      final expression = ParenthesisGroupExpression(
+        NumberExpression(Decimal.fromInt(42)),
+      );
+      final result = eval(expression);
+      expect(result, equals(SuccessEval(expression, Decimal.fromInt(42))));
+    });
+
+    test('Parenthesis group with binary expression', () {
+      final innerExpression = BinaryExpression(
+        BinaryOperator.add,
+        NumberExpression(Decimal.fromInt(5)),
+        NumberExpression(Decimal.fromInt(3)),
+      );
+      final expression = ParenthesisGroupExpression(innerExpression);
+      final result = eval(expression);
+      expect(result, equals(SuccessEval(expression, Decimal.fromInt(8))));
+    });
+
+    test('Nested parenthesis groups', () {
+      final innerExpression = ParenthesisGroupExpression(
+        NumberExpression(Decimal.fromInt(10)),
+      );
+      final expression = ParenthesisGroupExpression(innerExpression);
+      final result = eval(expression);
+      expect(result, equals(SuccessEval(expression, Decimal.fromInt(10))));
+    });
+
+    test('Parenthesis group with function expression', () {
+      final functionExpression = FunctionExpression(
+        MathFunction.square,
+        NumberExpression(Decimal.fromInt(5)),
+      );
+      final expression = ParenthesisGroupExpression(functionExpression);
+      final result = eval(expression);
+      expect(result, equals(SuccessEval(expression, Decimal.fromInt(25))));
+    });
+
+    test('Parenthesis group with error propagation', () {
+      final errorExpression = BinaryExpression(
+        BinaryOperator.divide,
+        NumberExpression(Decimal.fromInt(10)),
+        NumberExpression(Decimal.fromInt(0)),
+      );
+      final expression = ParenthesisGroupExpression(errorExpression);
+      final result = eval(expression);
+      expect(result, isA<FailureEval>());
+      final error = (result as FailureEval).error;
+      expect(error, isA<DivisionByZeroError>());
+    });
+  });
+
   group('Error Handling', () {
     test('Invalid tangent (90 degrees)', () {
       final expression = FunctionExpression(

@@ -1,4 +1,5 @@
 import 'package:flutter_omarchy/flutter_omarchy.dart';
+// ignore: implementation_imports
 import 'package:flutter_omarchy/src/widgets/utils/default_foreground.dart';
 import 'package:intl/intl.dart';
 import 'package:omarchy_calculator/src/notifier.dart';
@@ -58,8 +59,8 @@ class HistoryPane extends StatelessWidget {
               children: [
                 OmarchyButton(
                   style: OmarchyButtonStyle.filled(AnsiColor.red),
-                  child: Text('Clear'),
                   onPressed: onClear,
+                  child: Text('Clear'),
                 ),
               ],
             ),
@@ -71,7 +72,7 @@ class HistoryPane extends StatelessWidget {
 }
 
 class _HistoryTile extends StatelessWidget {
-  const _HistoryTile(this.item, {super.key, required this.onTap});
+  const _HistoryTile(this.item, {required this.onTap});
 
   final CalculatorState item;
   final VoidCallback onTap;
@@ -85,11 +86,9 @@ class _HistoryTile extends StatelessWidget {
       spacing: 2,
       children: [
         Text(
-          DateFormat.Hm().format(item.dateTime) +
-              ' ' +
-              DateFormat.s().format(item.dateTime) +
-              ' • ' +
-              DateFormat.Md().format(item.dateTime),
+          '${DateFormat.Hm().format(item.dateTime)}'
+          ' ${DateFormat.s().format(item.dateTime)}'
+          ' • ${DateFormat.Md().format(item.dateTime)}',
           style: theme.text.normal.copyWith(
             color: theme.colors.bright.black,
             fontSize: 11,

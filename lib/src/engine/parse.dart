@@ -232,7 +232,10 @@ _ParsingStep _parsePrimaryExpression(
           (tokens[inner.nextIndex] as ParenthesisToken).isOpen) {
         return _ParsingStep(const EmptyExpression(), index + 1);
       }
-      return _ParsingStep(inner.expression, inner.nextIndex + 1);
+      return _ParsingStep(
+        ParenthesisGroupExpression(inner.expression),
+        inner.nextIndex + 1,
+      );
 
     case CommandToken():
       return _ParsingStep(const EmptyExpression(), index + 1);
@@ -429,6 +432,26 @@ enum MathFunction {
       case MathFunction.percent:
         return '%';
     }
+  }
+}
+
+class ParenthesisGroupExpression extends Expression {
+  const ParenthesisGroupExpression(this.expression);
+  final Expression expression;
+
+  @override
+  bool operator ==(Object other) {
+    if (identical(this, other)) return true;
+    return other is ParenthesisGroupExpression &&
+        other.expression == expression;
+  }
+
+  @override
+  int get hashCode => expression.hashCode;
+
+  @override
+  String toString() {
+    return '($expression)';
   }
 }
 

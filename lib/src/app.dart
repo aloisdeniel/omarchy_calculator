@@ -1,11 +1,10 @@
-import 'package:flutter/services.dart';
 import 'package:omarchy_calculator/src/engine/command.dart';
 import 'package:omarchy_calculator/src/notifier.dart';
 import 'package:omarchy_calculator/src/widgets/buttons.dart';
 import 'package:omarchy_calculator/src/widgets/display.dart';
 import 'package:omarchy_calculator/src/widgets/history.dart';
 import 'package:flutter_omarchy/flutter_omarchy.dart';
-import 'package:omarchy_calculator/src/widgets/keyboard_listener.dart';
+import 'package:omarchy_calculator/src/widgets/shortcuts.dart';
 
 class CalculatorApp extends StatelessWidget {
   const CalculatorApp({super.key});
@@ -28,7 +27,6 @@ class CalculatorPage extends StatefulWidget {
 
 class _CalculatorPageState extends State<CalculatorPage> {
   final notifier = CalculatorNotifier();
-  final _focusNode = FocusNode();
   final _mainPane = GlobalKey();
 
   final _simulatedPress = <Command, SimulatedPressController>{
@@ -47,16 +45,11 @@ class _CalculatorPageState extends State<CalculatorPage> {
   @override
   Widget build(BuildContext context) {
     final theme = OmarchyTheme.of(context);
-    return AppKeyboardListener(
-      onKey: (key) {
-        switch (key.logicalKey) {
-          case LogicalKeyboardKey.digit1:
-            _simulatedPress[Command.digit(1)]?.press();
-
-            break;
-          default:
-        }
-        print(key);
+    return AppShortcuts(
+      onCommand: (command) {
+        final sim = _simulatedPress[command];
+        sim?.press();
+        notifier.execute(command);
       },
       child: AnimatedBuilder(
         animation: notifier,
@@ -112,7 +105,9 @@ class _CalculatorPageState extends State<CalculatorPage> {
                         child: FadeIn(
                           child: HistoryPane(
                             history: notifier.history,
-                            onSelect: (v) {},
+                            onSelect: (v) {
+                              notifier.restore(v);
+                            },
                             onClear: notifier.history.isNotEmpty
                                 ? () {
                                     notifier.clearHistory();

@@ -19,14 +19,24 @@ class Display extends StatelessWidget {
           children: [
             Stack(
               children: [
-                SingleChildScrollView(
-                  reverse: true,
-                  scrollDirection: Axis.horizontal,
-                  padding: const EdgeInsets.symmetric(horizontal: 14.0),
-                  child: ExpressionView(
-                    key: Key('details'),
-                    state,
-                    fontSize: isCondensed ? 14 : 22,
+                ConstrainedBox(
+                  constraints: BoxConstraints(
+                    minWidth: layout.maxWidth,
+                    maxWidth: double.infinity,
+                  ),
+                  child: AnimatedOpacity(
+                    duration: const Duration(milliseconds: 200),
+                    opacity: state.isResult ? 0.5 : 1,
+                    child: SingleChildScrollView(
+                      reverse: true,
+                      scrollDirection: Axis.horizontal,
+                      padding: const EdgeInsets.symmetric(horizontal: 14.0),
+                      child: ExpressionView(
+                        key: Key('details'),
+                        state,
+                        fontSize: isCondensed ? 14 : 22,
+                      ),
+                    ),
                   ),
                 ),
                 Positioned(
@@ -87,14 +97,23 @@ class _ResultDisplay extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final theme = OmarchyTheme.of(context);
+    final text = switch (state.result) {
+      FailureEval(:final error) => error.toString(),
+      SuccessEval() when state.input.isNotEmpty => state.input,
+      SuccessEval(:final result) => result.toString(),
+    };
+    final color = switch (state.result) {
+      FailureEval() => theme.colors.bright.red,
+      SuccessEval() when state.isResult => theme.colors.bright.green,
+      SuccessEval() => null,
+    };
     return FittedBox(
+      key: ValueKey(color),
       child: SelectableText(
-        switch (state.result) {
-          FailureEval(:final error) => error.toString(),
-          SuccessEval() when state.input.isNotEmpty => state.input,
-          SuccessEval(:final result) => result.toString(),
-        },
-        style: TextStyle(fontSize: isCondensed ? 48 : 88),
+        text,
+        style: TextStyle(
+          fontSize: isCondensed ? 48 : 88,
+        ).copyWith(color: color),
         maxLines: 1,
         cursorColor: theme.colors.normal.white,
         selectionColor: theme.colors.normal.white,

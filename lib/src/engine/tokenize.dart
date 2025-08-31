@@ -77,12 +77,9 @@ List<Token> tokenize(List<Command> commands) {
       case CloseParenthesis():
         flushCurrent();
         result.add(const ParenthesisToken.close());
-      case Pi():
+      case ConstantCommand(:final constant):
         flushCurrent();
-        result.add(const ConstantToken(Constant.pi));
-      case Euler():
-        flushCurrent();
-        result.add(const ConstantToken(Constant.euler));
+        result.add(ConstantToken(constant));
       case Percent():
         flushCurrent();
         result.add(const OperatorToken(OperatorTokenType.percent));
