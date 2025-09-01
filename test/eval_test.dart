@@ -2,6 +2,7 @@ import 'package:decimal/decimal.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:omarchy_calculator/src/engine/eval.dart';
 import 'package:omarchy_calculator/src/engine/parse.dart' hide OtherError;
+import 'package:omarchy_calculator/src/engine/tokenize.dart';
 
 void main() {
   group('Basic Expressions', () {
@@ -241,6 +242,7 @@ void main() {
     test('Simple parenthesis group', () {
       final expression = ParenthesisGroupExpression(
         NumberExpression(Decimal.fromInt(42)),
+        true,
       );
       final result = eval(expression);
       expect(result, equals(SuccessEval(expression, Decimal.fromInt(42))));
@@ -252,7 +254,7 @@ void main() {
         NumberExpression(Decimal.fromInt(5)),
         NumberExpression(Decimal.fromInt(3)),
       );
-      final expression = ParenthesisGroupExpression(innerExpression);
+      final expression = ParenthesisGroupExpression(innerExpression, true);
       final result = eval(expression);
       expect(result, equals(SuccessEval(expression, Decimal.fromInt(8))));
     });
@@ -260,8 +262,9 @@ void main() {
     test('Nested parenthesis groups', () {
       final innerExpression = ParenthesisGroupExpression(
         NumberExpression(Decimal.fromInt(10)),
+        true,
       );
-      final expression = ParenthesisGroupExpression(innerExpression);
+      final expression = ParenthesisGroupExpression(innerExpression, true);
       final result = eval(expression);
       expect(result, equals(SuccessEval(expression, Decimal.fromInt(10))));
     });
@@ -271,7 +274,7 @@ void main() {
         MathFunction.square,
         NumberExpression(Decimal.fromInt(5)),
       );
-      final expression = ParenthesisGroupExpression(functionExpression);
+      final expression = ParenthesisGroupExpression(functionExpression, true);
       final result = eval(expression);
       expect(result, equals(SuccessEval(expression, Decimal.fromInt(25))));
     });
@@ -282,11 +285,185 @@ void main() {
         NumberExpression(Decimal.fromInt(10)),
         NumberExpression(Decimal.fromInt(0)),
       );
-      final expression = ParenthesisGroupExpression(errorExpression);
+      final expression = ParenthesisGroupExpression(errorExpression, true);
       final result = eval(expression);
       expect(result, isA<FailureEval>());
       final error = (result as FailureEval).error;
       expect(error, isA<DivisionByZeroError>());
+    });
+  });
+
+  group('Unmatched Parentheses', () {
+    test('Simple unmatched opening parenthesis', () {
+      final expression = ParenthesisGroupExpression(
+        NumberExpression(Decimal.fromInt(42)),
+        false, // isClosed = false indicates unmatched parenthesis
+      );
+      final result = eval(expression);
+      expect(result, isA<FailureEval>());
+      final error = (result as FailureEval).error;
+      expect(error, isA<UnclosedParenthesisError>());
+      expect(error.toString(), equals('Unclosed parenthesis error'));
+    });
+
+    test('Unmatched opening parenthesis with binary expression', () {
+      final expression = ParenthesisGroupExpression(
+        BinaryExpression(
+          BinaryOperator.add,
+          NumberExpression(Decimal.fromInt(5)),
+          NumberExpression(Decimal.fromInt(3)),
+        ),
+        false,
+      );
+      final result = eval(expression);
+      expect(result, isA<FailureEval>());
+      final error = (result as FailureEval).error;
+      expect(error, isA<UnclosedParenthesisError>());
+    });
+
+    test('Unmatched opening parenthesis with function expression', () {
+      final expression = ParenthesisGroupExpression(
+        FunctionExpression(
+          MathFunction.square,
+          NumberExpression(Decimal.fromInt(5)),
+        ),
+        false,
+      );
+      final result = eval(expression);
+      expect(result, isA<FailureEval>());
+      final error = (result as FailureEval).error;
+      expect(error, isA<UnclosedParenthesisError>());
+    });
+
+    test('Unmatched opening parenthesis with constant', () {
+      final expression = ParenthesisGroupExpression(
+        ConstantExpression(Constant.pi),
+        false,
+      );
+      final result = eval(expression);
+      expect(result, isA<FailureEval>());
+      final error = (result as FailureEval).error;
+      expect(error, isA<UnclosedParenthesisError>());
+    });
+
+    test('Multiple nested unmatched opening parentheses', () {
+      final expression = ParenthesisGroupExpression(
+        ParenthesisGroupExpression(
+          NumberExpression(Decimal.fromInt(10)),
+          false, // Inner parenthesis is also unmatched
+        ),
+        false, // Outer parenthesis is unmatched
+      );
+      final result = eval(expression);
+      expect(result, isA<FailureEval>());
+      final error = (result as FailureEval).error;
+      expect(error, isA<UnclosedParenthesisError>());
+    });
+
+    test('Unmatched opening parenthesis in binary expression left operand', () {
+      final expression = BinaryExpression(
+        BinaryOperator.multiply,
+        ParenthesisGroupExpression(
+          NumberExpression(Decimal.fromInt(5)),
+          false,
+        ),
+        NumberExpression(Decimal.fromInt(3)),
+      );
+      final result = eval(expression);
+      expect(result, isA<FailureEval>());
+      final error = (result as FailureEval).error;
+      expect(error, isA<UnclosedParenthesisError>());
+    });
+
+    test('Unmatched opening parenthesis in binary expression right operand', () {
+      final expression = BinaryExpression(
+        BinaryOperator.add,
+        NumberExpression(Decimal.fromInt(10)),
+        ParenthesisGroupExpression(
+          BinaryExpression(
+            BinaryOperator.subtract,
+            NumberExpression(Decimal.fromInt(8)),
+            NumberExpression(Decimal.fromInt(3)),
+          ),
+          false,
+        ),
+      );
+      final result = eval(expression);
+      expect(result, isA<FailureEval>());
+      final error = (result as FailureEval).error;
+      expect(error, isA<UnclosedParenthesisError>());
+    });
+
+    test('Unmatched opening parenthesis in function argument', () {
+      final expression = FunctionExpression(
+        MathFunction.squareRoot,
+        ParenthesisGroupExpression(
+          NumberExpression(Decimal.fromInt(16)),
+          false,
+        ),
+      );
+      final result = eval(expression);
+      expect(result, isA<FailureEval>());
+      final error = (result as FailureEval).error;
+      expect(error, isA<UnclosedParenthesisError>());
+    });
+
+    test('Unmatched opening parenthesis in unary expression operand', () {
+      final expression = UnaryExpression(
+        UnaryOperator.negate,
+        ParenthesisGroupExpression(
+          NumberExpression(Decimal.fromInt(7)),
+          false,
+        ),
+      );
+      final result = eval(expression);
+      expect(result, isA<FailureEval>());
+      final error = (result as FailureEval).error;
+      expect(error, isA<UnclosedParenthesisError>());
+    });
+
+    test('Mixed matched and unmatched parentheses', () {
+      final expression = ParenthesisGroupExpression(
+        BinaryExpression(
+          BinaryOperator.multiply,
+          NumberExpression(Decimal.fromInt(2)),
+          ParenthesisGroupExpression(
+            BinaryExpression(
+              BinaryOperator.add,
+              NumberExpression(Decimal.fromInt(3)),
+              NumberExpression(Decimal.fromInt(4)),
+            ),
+            true, // This inner parenthesis is matched
+          ),
+        ),
+        false, // But the outer parenthesis is unmatched
+      );
+      final result = eval(expression);
+      expect(result, isA<FailureEval>());
+      final error = (result as FailureEval).error;
+      expect(error, isA<UnclosedParenthesisError>());
+    });
+
+    test('Unmatched opening parenthesis with complex nested expression', () {
+      final expression = ParenthesisGroupExpression(
+        BinaryExpression(
+          BinaryOperator.add,
+          BinaryExpression(
+            BinaryOperator.multiply,
+            NumberExpression(Decimal.fromInt(2)),
+            ConstantExpression(Constant.pi),
+          ),
+          FunctionExpression(
+            MathFunction.square,
+            NumberExpression(Decimal.fromInt(3)),
+          ),
+        ),
+        false,
+      );
+      final result = eval(expression);
+      expect(result, isA<FailureEval>());
+      final error = (result as FailureEval).error;
+      expect(error, isA<UnclosedParenthesisError>());
     });
   });
 

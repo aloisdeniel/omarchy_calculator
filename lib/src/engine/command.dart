@@ -572,7 +572,7 @@ class ConstantCommand extends Command {
 
   @override
   String toString() {
-    return 'π';
+    return constant.toString();
   }
 
   @override

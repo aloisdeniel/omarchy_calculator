@@ -7,5 +7,6 @@ import 'package:omarchy_calculator/src/app.dart';
 
 void main() {
   final isPreview = kIsWeb || !Platform.isLinux;
-  runApp(isPreview ? const OmarchyPreview() : const CalculatorApp());
+  final app = const CalculatorApp();
+  runApp(isPreview ? OmarchyPreview(children: [app]) : app);
 }

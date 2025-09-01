@@ -1,13 +1,22 @@
-import 'dart:typed_data';
+import 'dart:io';
 
+import 'package:flutter/foundation.dart';
 import 'package:flutter_omarchy/flutter_omarchy.dart';
-import 'package:omarchy_calculator/src/app.dart';
 
 /// All the app in a simulated Omarchy desktop.
 ///
 /// This is for demonstration purpose on web.
 class OmarchyPreview extends StatefulWidget {
-  const OmarchyPreview({super.key});
+  const OmarchyPreview({
+    super.key,
+    required this.children,
+    this.desktopBarPadding,
+    this.windowConstraints,
+  });
+
+  final EdgeInsetsGeometry? desktopBarPadding;
+  final List<Widget> children;
+  final List<BoxConstraints>? windowConstraints;
 
   @override
   State<OmarchyPreview> createState() => _OmarchyPreviewState();
@@ -16,6 +25,8 @@ class OmarchyPreview extends StatefulWidget {
 class _OmarchyPreviewState extends State<OmarchyPreview> {
   String theme = 'tokyo-night';
   final allThemes = OmarchyColorThemes.all.entries.toList();
+
+  int selectedWorkspace = 0;
 
   void _nextTheme() {
     final currentIndex = allThemes.indexWhere(
@@ -42,7 +53,18 @@ class _OmarchyPreviewState extends State<OmarchyPreview> {
         textDirection: TextDirection.ltr,
         child: Column(
           children: [
-            OmarchyDesktopBar(onNextTheme: _nextTheme),
+            OmarchyDesktopBar(
+              onNextTheme: _nextTheme,
+              workspaces: widget.children.length,
+              selected: selectedWorkspace,
+              onSelectedChanged: (i) {
+                setState(() {
+                  selectedWorkspace = i;
+                });
+              },
+
+              padding: widget.desktopBarPadding,
+            ),
             Expanded(
               child: Stack(
                 children: [
@@ -57,7 +79,16 @@ class _OmarchyPreviewState extends State<OmarchyPreview> {
                     padding:
                         const EdgeInsets.all(14.0) +
                         EdgeInsets.only(bottom: insets.bottom),
-                    child: OmarchyWindow(child: CalculatorApp()),
+                    child: Center(
+                      child: ConstrainedBox(
+                        constraints:
+                            widget.windowConstraints?[selectedWorkspace] ??
+                            BoxConstraints.expand(),
+                        child: OmarchyWindow(
+                          child: widget.children[selectedWorkspace],
+                        ),
+                      ),
+                    ),
                   ),
                 ],
               ),
@@ -70,18 +101,35 @@ class _OmarchyPreviewState extends State<OmarchyPreview> {
 }
 
 class OmarchyDesktopBar extends StatelessWidget {
-  const OmarchyDesktopBar({super.key, required this.onNextTheme});
+  const OmarchyDesktopBar({
+    super.key,
+    required this.workspaces,
+    required this.onNextTheme,
+    required this.selected,
+    required this.onSelectedChanged,
+    this.padding,
+  });
 
   final VoidCallback onNextTheme;
+  final int workspaces;
+  final int selected;
+  final ValueChanged<int> onSelectedChanged;
+  final EdgeInsetsGeometry? padding;
 
   @override
   Widget build(BuildContext context) {
     final theme = OmarchyTheme.of(context);
+    final padding =
+        this.padding ??
+        EdgeInsets.only(
+          left: 8.0 + (!kIsWeb && Platform.isMacOS ? 54 : 0),
+          right: 8.0,
+        );
     return Container(
       height: 24,
       decoration: BoxDecoration(color: theme.colors.background),
       child: ListView(
-        padding: const EdgeInsets.symmetric(horizontal: 8.0),
+        padding: padding,
         scrollDirection: Axis.horizontal,
         children: [
           PointerArea(
@@ -97,6 +145,28 @@ class OmarchyDesktopBar extends StatelessWidget {
               ),
             ),
           ),
+          for (var i = 0; i < workspaces; i++)
+            PointerArea(
+              onTap: () => onSelectedChanged(i),
+              child: AspectRatio(
+                aspectRatio: 1,
+                child: Center(
+                  child: selected == i
+                      ? Container(
+                          width: 6,
+                          height: 8,
+                          decoration: BoxDecoration(
+                            color: theme.colors.bright.white,
+                            borderRadius: BorderRadius.circular(2),
+                          ),
+                        )
+                      : Text(
+                          '${i + 1}',
+                          style: theme.text.normal.copyWith(fontSize: 12),
+                        ),
+                ),
+              ),
+            ),
         ],
       ),
     );

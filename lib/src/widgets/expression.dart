@@ -57,10 +57,11 @@ TextSpan formatExpression(OmarchyThemeData theme, Expression expr) {
           style: theme.text.normal.copyWith(color: theme.colors.normal.white),
         ),
         formatExpression(theme, expression),
-        TextSpan(
-          text: ')',
-          style: theme.text.normal.copyWith(color: theme.colors.normal.white),
-        ),
+        if (expr.isClosed)
+          TextSpan(
+            text: ')',
+            style: theme.text.normal.copyWith(color: theme.colors.normal.white),
+          ),
       ],
     ),
     BinaryExpression(:final operator, :final left, :final right) => TextSpan(

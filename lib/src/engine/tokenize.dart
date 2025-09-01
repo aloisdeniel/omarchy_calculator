@@ -232,7 +232,18 @@ class ConstantToken extends Token {
   }
 }
 
-enum Constant { pi, euler }
+enum Constant {
+  pi,
+  euler;
+
+  @override
+  String toString() {
+    return switch (this) {
+      Constant.pi => 'π',
+      Constant.euler => 'e',
+    };
+  }
+}
 
 /// For representing commands that do not fit into other categories.
 class CommandToken extends Token {

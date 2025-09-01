@@ -73,40 +73,33 @@ class CalculatorNotifier extends ChangeNotifier {
       notifyListeners();
       return;
     }
-    try {
-      final isResult = action is Equals;
-      final commands = [...state.commands, action];
-      var tokens = tokenize(commands);
-      final rawExpression = parse(tokens);
-      final expression = evalPreviousExpressions(rawExpression);
-      final result = eval(expression);
-      final input = ei.input(tokens);
+    final isResult = action is Equals;
+    final commands = [...state.commands, action];
+    var tokens = tokenize(commands);
+    final rawExpression = parse(tokens);
+    final expression = evalPreviousExpressions(rawExpression);
+    final result = eval(expression);
+    final input = ei.input(tokens);
 
-      print(printExpression(expression));
+    final newState = CalculatorState(
+      id: state.id + 1,
+      commands: commands,
+      input: input,
+      tokens: tokens,
+      isResult: isResult,
+      expression: expression,
+      result: result,
+      dateTime: DateTime.now(),
+    );
 
-      final newState = CalculatorState(
-        id: state.id + 1,
-        commands: commands,
-        input: input,
-        tokens: tokens,
-        isResult: isResult,
-        expression: expression,
-        result: result,
-        dateTime: DateTime.now(),
-      );
-
-      if (isResult) {
-        _current.clear();
-        _history.insert(0, newState);
-      }
-
-      _current.add(newState);
-
-      notifyListeners();
-    } catch (e) {
-      // if any error occurs, we just ignore the action
-      print('Error executing action: $e');
+    if (isResult) {
+      _current.clear();
+      _history.insert(0, newState);
     }
+
+    _current.add(newState);
+
+    notifyListeners();
   }
 
   void clearHistory() {

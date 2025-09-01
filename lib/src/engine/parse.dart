@@ -230,10 +230,13 @@ _ParsingStep _parsePrimaryExpression(
       if (inner.nextIndex >= tokens.length ||
           tokens[inner.nextIndex] is! ParenthesisToken ||
           (tokens[inner.nextIndex] as ParenthesisToken).isOpen) {
-        return _ParsingStep(const EmptyExpression(), index + 1);
+        return _ParsingStep(
+          ParenthesisGroupExpression(inner.expression, false),
+          inner.nextIndex + 1,
+        );
       }
       return _ParsingStep(
-        ParenthesisGroupExpression(inner.expression),
+        ParenthesisGroupExpression(inner.expression, true),
         inner.nextIndex + 1,
       );
 
@@ -436,18 +439,20 @@ enum MathFunction {
 }
 
 class ParenthesisGroupExpression extends Expression {
-  const ParenthesisGroupExpression(this.expression);
+  const ParenthesisGroupExpression(this.expression, this.isClosed);
   final Expression expression;
+  final bool isClosed;
 
   @override
   bool operator ==(Object other) {
     if (identical(this, other)) return true;
     return other is ParenthesisGroupExpression &&
+        other.isClosed == isClosed &&
         other.expression == expression;
   }
 
   @override
-  int get hashCode => expression.hashCode;
+  int get hashCode => Object.hash(expression, isClosed);
 
   @override
   String toString() {

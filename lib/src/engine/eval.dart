@@ -34,8 +34,11 @@ Expression evalPreviousExpressions(Expression expression) {
       return UnaryExpression(operator, evalPreviousExpressions(operand));
     case FunctionExpression(:final function, :final argument):
       return FunctionExpression(function, evalPreviousExpressions(argument));
-    case ParenthesisGroupExpression(:final expression):
-      return ParenthesisGroupExpression(evalPreviousExpressions(expression));
+    case ParenthesisGroupExpression(:final expression, :final isClosed):
+      return ParenthesisGroupExpression(
+        evalPreviousExpressions(expression),
+        isClosed,
+      );
     case EmptyExpression():
     case ConstantExpression():
     case NumberExpression():
@@ -122,7 +125,10 @@ EvalResult _evaluateExpression(Expression expression) {
           }
       }
 
-    case ParenthesisGroupExpression(:final expression):
+    case ParenthesisGroupExpression(:final expression, :final isClosed):
+      if (!isClosed) {
+        return EvalResult.failure(expression, const UnclosedParenthesisError());
+      }
       return _evaluateExpression(expression);
 
     case FunctionExpression(function: final function, argument: final argument):

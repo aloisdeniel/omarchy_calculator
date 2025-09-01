@@ -222,6 +222,7 @@ void main() {
             NumberExpression(Decimal.fromInt(3)),
             NumberExpression(Decimal.fromInt(4)),
           ),
+          true,
         ),
       ),
     );
@@ -486,6 +487,7 @@ void main() {
             NumberExpression(Decimal.fromInt(2)),
             NumberExpression(Decimal.fromInt(3)),
           ),
+          true,
         ),
         NumberExpression(Decimal.fromInt(4)),
       ),
@@ -516,9 +518,11 @@ void main() {
                 NumberExpression(Decimal.fromInt(2)),
                 NumberExpression(Decimal.fromInt(3)),
               ),
+              true,
             ),
             NumberExpression(Decimal.fromInt(4)),
           ),
+          true,
         ),
         NumberExpression(Decimal.fromInt(1)),
       ),
@@ -546,6 +550,7 @@ void main() {
             NumberExpression(Decimal.fromInt(5)),
             NumberExpression(Decimal.fromInt(2)),
           ),
+          true,
         ),
         ParenthesisGroupExpression(
           BinaryExpression(
@@ -553,6 +558,7 @@ void main() {
             NumberExpression(Decimal.fromInt(3)),
             NumberExpression(Decimal.fromInt(1)),
           ),
+          true,
         ),
       ),
     );
@@ -575,6 +581,7 @@ void main() {
             NumberExpression(Decimal.fromInt(2)),
             NumberExpression(Decimal.fromInt(3)),
           ),
+          true,
         ),
         NumberExpression(Decimal.fromInt(2)),
       ),
@@ -669,6 +676,7 @@ void main() {
             ConstantExpression(Constant.pi),
             ConstantExpression(Constant.euler),
           ),
+          true,
         ),
         NumberExpression(Decimal.fromInt(2)),
       ),
@@ -871,6 +879,7 @@ void main() {
             NumberExpression(Decimal.fromInt(30)),
             NumberExpression(Decimal.fromInt(15)),
           ),
+          true,
         ),
       ),
     );
@@ -892,6 +901,7 @@ void main() {
             NumberExpression(Decimal.fromInt(60)),
             NumberExpression(Decimal.fromInt(2)),
           ),
+          true,
         ),
       ),
     );
@@ -1044,6 +1054,7 @@ void main() {
             NumberExpression(Decimal.fromInt(5)),
             NumberExpression(Decimal.fromInt(3)),
           ),
+          true,
         ),
       ),
     );
@@ -1125,6 +1136,7 @@ void main() {
               NumberExpression(Decimal.fromInt(1)),
               NumberExpression(Decimal.parse('0.05')),
             ),
+            true,
           ),
           NumberExpression(Decimal.fromInt(10)),
         ),
@@ -1213,6 +1225,7 @@ void main() {
               NumberExpression(Decimal.fromInt(32)),
               NumberExpression(Decimal.fromInt(32)),
             ),
+            true,
           ),
           NumberExpression(Decimal.fromInt(5)),
         ),
@@ -1245,6 +1258,7 @@ void main() {
               NumberExpression(Decimal.parse('0.5')),
             ),
           ),
+          true,
         ),
       ),
     );
@@ -1288,6 +1302,7 @@ void main() {
       ],
       expected: ParenthesisGroupExpression(
         NumberExpression(Decimal.fromInt(42)),
+        true,
       ),
     );
 
@@ -1300,9 +1315,8 @@ void main() {
         ParenthesisToken.close(),
       ],
       expected: ParenthesisGroupExpression(
-        ParenthesisGroupExpression(
-          ConstantExpression(Constant.pi),
-        ),
+        ParenthesisGroupExpression(ConstantExpression(Constant.pi), true),
+        true,
       ),
     );
 
@@ -1315,9 +1329,7 @@ void main() {
       ],
       expected: FunctionExpression(
         MathFunction.square,
-        ParenthesisGroupExpression(
-          ConstantExpression(Constant.euler),
-        ),
+        ParenthesisGroupExpression(ConstantExpression(Constant.euler), true),
       ),
     );
 
@@ -1339,24 +1351,25 @@ void main() {
       ],
       expected: BinaryExpression(
         BinaryOperator.subtract,
-          BinaryExpression(
-            BinaryOperator.power,
-            ParenthesisGroupExpression(
+        BinaryExpression(
+          BinaryOperator.power,
+          ParenthesisGroupExpression(
+            BinaryExpression(
+              BinaryOperator.add,
               BinaryExpression(
-                BinaryOperator.add,
-                BinaryExpression(
-                  BinaryOperator.multiply,
-                  NumberExpression(Decimal.fromInt(2)),
-                  ConstantExpression(Constant.pi),
-                ),
-                FunctionExpression(
-                  MathFunction.square,
-                  NumberExpression(Decimal.fromInt(3)),
-                ),
+                BinaryOperator.multiply,
+                NumberExpression(Decimal.fromInt(2)),
+                ConstantExpression(Constant.pi),
+              ),
+              FunctionExpression(
+                MathFunction.square,
+                NumberExpression(Decimal.fromInt(3)),
               ),
             ),
-            NumberExpression(Decimal.fromInt(2)),
+            true,
           ),
+          NumberExpression(Decimal.fromInt(2)),
+        ),
         FunctionExpression(
           MathFunction.squareRoot,
           NumberExpression(Decimal.fromInt(10)),
