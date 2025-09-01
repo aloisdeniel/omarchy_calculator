@@ -2,42 +2,43 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:omarchy_calculator/src/engine/command.dart';
 import 'package:omarchy_calculator/src/engine/tokenize.dart';
 
-void testTokenize(
-  String description, {
+void testTokenize({
   required List<Command> commands,
   required List<Token> expected,
+  String? description,
 }) {
-  test(description, () {
-    print('commands:${commands.join(' ')}');
-    print('expected:${expected.join(' ')}');
+  var effectiveDescription = commands.map((e) => e.toString()).join(' ');
+  if (description != null) {
+    effectiveDescription = '$description: $effectiveDescription';
+  }
+  test(effectiveDescription, () {
     expect(tokenize(commands), equals(expected));
   });
 }
 
 void main() {
   testTokenize(
-    'Integer number',
     commands: const [Command.digit(1), Command.digit(2), Command.digit(3)],
     expected: [NumberToken('123')],
+    description: 'Integer number',
   );
 
-  test('Only decimal point', () {
-    const commands = [Command.decimalPoint()];
-    const expected = [NumberToken('0')];
-    expect(tokenize(commands), equals(expected));
-  });
-  test('Uncompleted decimal number', () {
-    const commands = [
+  testTokenize(
+    commands: const [Command.decimalPoint()],
+    expected: const [NumberToken('0')],
+    description: 'Only decimal point',
+  );
+  testTokenize(
+    commands: const [
       Command.digit(1),
       Command.digit(2),
       Command.digit(3),
       Command.decimalPoint(),
-    ];
-    const expected = [NumberToken('123')];
-    expect(tokenize(commands), equals(expected));
-  });
-  test('Decimal number', () {
-    const commands = [
+    ],
+    expected: const [NumberToken('123')],
+  );
+  testTokenize(
+    commands: const [
       Command.digit(1),
       Command.digit(2),
       Command.digit(3),
@@ -45,13 +46,13 @@ void main() {
       Command.digit(4),
       Command.digit(5),
       Command.digit(6),
-    ];
-    const expected = [NumberToken('123.456')];
-    expect(tokenize(commands), equals(expected));
-  });
+    ],
+    expected: const [NumberToken('123.456')],
+    description: 'Decimal number',
+  );
 
-  test('Multiple decimal points', () {
-    const commands = [
+  testTokenize(
+    commands: const [
       Command.digit(1),
       Command.digit(2),
       Command.digit(3),
@@ -63,98 +64,95 @@ void main() {
       Command.digit(7),
       Command.digit(8),
       Command.digit(9),
-    ];
-    const expected = [NumberToken('123.456789')];
-    expect(tokenize(commands), equals(expected));
-  });
+    ],
+    expected: const [NumberToken('123.456789')],
+    description: 'Multiple decimal points',
+  );
 
   group('Multiply', () {
-    test('when surrounded', () {
-      const commands = [
+    testTokenize(
+      commands: const [
         Command.digit(1),
         Command.digit(2),
         Command.operator(OperatorType.multiply),
         Command.digit(4),
         Command.digit(5),
-      ];
-      const expected = [
+      ],
+      expected: const [
         NumberToken('12'),
         OperatorToken(OperatorTokenType.multiply),
         NumberToken('45'),
-      ];
-      expect(tokenize(commands), equals(expected));
-    });
+      ],
+      description: 'when surrounded',
+    );
 
-    test('when last', () {
-      const commands = [
+    testTokenize(
+      commands: const [
         Command.digit(1),
         Command.digit(2),
         Command.operator(OperatorType.multiply),
-      ];
-      const expected = [
+      ],
+      expected: const [
         NumberToken('12'),
         OperatorToken(OperatorTokenType.multiply),
-      ];
-      expect(tokenize(commands), equals(expected));
-    });
-    test('when first', () {
-      const commands = [
+      ],
+      description: 'when last',
+    );
+    testTokenize(
+      commands: const [
         Command.operator(OperatorType.multiply),
         Command.digit(1),
         Command.digit(2),
-      ];
-      const expected = [
+      ],
+      expected: const [
         OperatorToken(OperatorTokenType.multiply),
         NumberToken('12'),
-      ];
-      expect(tokenize(commands), equals(expected));
-    });
+      ],
+      description: 'when first',
+    );
   });
 
-  test('Constants', () {
-    final commands = [Command.pi(), Command.euler()];
-    const expected = [
-      ConstantToken(Constant.pi),
-      ConstantToken(Constant.euler),
-    ];
-    expect(tokenize(commands), equals(expected));
-  });
-  test('Functions', () {
-    const commands = [Command.square(), Command.cosine()];
-    const expected = [
+  testTokenize(
+    commands: [Command.pi(), Command.euler()],
+    expected: const [ConstantToken(Constant.pi), ConstantToken(Constant.euler)],
+    description: 'Constants',
+  );
+  testTokenize(
+    commands: const [Command.square(), Command.cosine()],
+    expected: const [
       FunctionToken(FunctionTokenType.square),
       FunctionToken(FunctionTokenType.cos),
-    ];
-    expect(tokenize(commands), equals(expected));
-  });
+    ],
+    description: 'Functions',
+  );
 
   group('Clear', () {
-    test('when surrounded', () {
-      const commands = [
+    testTokenize(
+      commands: const [
         Command.digit(1),
         Command.digit(2),
         Command.clearAll(),
         Command.digit(4),
         Command.digit(5),
-      ];
-      const expected = [NumberToken('45')];
-      expect(tokenize(commands), equals(expected));
-    });
+      ],
+      expected: const [NumberToken('45')],
+      description: 'when surrounded',
+    );
 
-    test('when last', () {
-      const commands = [Command.digit(1), Command.digit(2), Command.clearAll()];
-      const expected = [];
-      expect(tokenize(commands), equals(expected));
-    });
-    test('when first', () {
-      const commands = [Command.clearAll(), Command.digit(1), Command.digit(2)];
-      const expected = [NumberToken('12')];
-      expect(tokenize(commands), equals(expected));
-    });
+    testTokenize(
+      commands: const [Command.digit(1), Command.digit(2), Command.clearAll()],
+      expected: const [],
+      description: 'when last',
+    );
+    testTokenize(
+      commands: const [Command.clearAll(), Command.digit(1), Command.digit(2)],
+      expected: const [NumberToken('12')],
+      description: 'when first',
+    );
   });
 
-  test('Equals followed with a number', () {
-    const commands = [
+  testTokenize(
+    commands: const [
       Command.digit(6),
       Command.digit(0),
       Command.operator(OperatorType.divide),
@@ -162,14 +160,14 @@ void main() {
       Command.equals(),
       Command.digit(1),
       Command.digit(4),
-    ];
-    const expected = <Token>[
+    ],
+    expected: const <Token>[
       NumberToken('60'),
       OperatorToken(OperatorTokenType.divide),
       NumberToken('2'),
       OperatorToken(OperatorTokenType.equals),
       NumberToken('14'),
-    ];
-    expect(tokenize(commands), equals(expected));
-  });
+    ],
+    description: 'Equals followed with a number',
+  );
 }

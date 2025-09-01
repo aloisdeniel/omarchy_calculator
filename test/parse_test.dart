@@ -8,8 +8,11 @@ void testParse({
   required Expression expected,
   String? description,
 }) {
-  final effectiveDescription =
-      description ?? tokens.map((e) => e.toString()).join(' ');
+  var effectiveDescription = tokens.map((e) => e.toString()).join(' ');
+
+  if (description != null) {
+    effectiveDescription = '$description: $effectiveDescription';
+  }
   test(effectiveDescription, () {
     expect(parse(tokens), equals(expected));
   });
@@ -17,9 +20,9 @@ void testParse({
 
 void main() {
   testParse(
-    description: 'empty',
     tokens: <Token>[],
     expected: EmptyExpression(),
+    description: 'empty',
   );
 
   testParse(

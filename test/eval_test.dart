@@ -4,102 +4,116 @@ import 'package:omarchy_calculator/src/engine/eval.dart';
 import 'package:omarchy_calculator/src/engine/parse.dart' hide OtherError;
 import 'package:omarchy_calculator/src/engine/tokenize.dart';
 
+void testEval({
+  required Expression expr,
+  required EvalResult Function(Expression expr) expected,
+  String? description,
+}) {
+  var effectiveDescription = expr.toString();
+
+  if (description != null) {
+    effectiveDescription = '$description: $effectiveDescription';
+  }
+  test(effectiveDescription, () {
+    expect(eval(expr), equals(expected(expr)));
+  });
+}
+
 void main() {
   group('Basic Expressions', () {
-    test('Empty expression', () {
-      const expression = EmptyExpression();
-      final result = eval(expression);
-      expect(result, equals(SuccessEval(expression, Decimal.fromInt(0))));
-    });
+    testEval(
+      expr: EmptyExpression(),
+      expected: (e) => SuccessEval(e, Decimal.fromInt(0)),
+    );
 
-    test('Number expression', () {
-      final expression = NumberExpression(Decimal.fromInt(42));
-      final result = eval(expression);
-      expect(result, equals(SuccessEval(expression, Decimal.fromInt(42))));
-    });
+    testEval(
+      expr: NumberExpression(Decimal.fromInt(42)),
+      expected: (expr) => SuccessEval(expr, Decimal.fromInt(42)),
+      description: 'Number expression',
+    );
 
-    test('Decimal number expression', () {
-      final expression = NumberExpression(Decimal.parse('3.14'));
-      final result = eval(expression);
-      expect(result, equals(SuccessEval(expression, Decimal.parse('3.14'))));
-    });
+    testEval(
+      expr: NumberExpression(Decimal.parse('3.14')),
+      expected: (expr) => SuccessEval(expr, Decimal.parse('3.14')),
+      description: 'Decimal number expression',
+    );
 
-    test('Negative number expression', () {
-      final expression = NumberExpression(Decimal.fromInt(-15));
-      final result = eval(expression);
-      expect(result, equals(SuccessEval(expression, Decimal.fromInt(-15))));
-    });
+    testEval(
+      expr: NumberExpression(Decimal.fromInt(-15)),
+      expected: (expr) => SuccessEval(expr, Decimal.fromInt(-15)),
+      description: 'Negative number expression',
+    );
   });
 
   group('Unary Expressions', () {
-    test('Negate positive number', () {
-      final expression = UnaryExpression(
+    testEval(
+      expr: UnaryExpression(
         UnaryOperator.negate,
         NumberExpression(Decimal.fromInt(10)),
-      );
-      final result = eval(expression);
-      expect(result, equals(SuccessEval(expression, Decimal.fromInt(-10))));
-    });
+      ),
+      expected: (expr) => SuccessEval(expr, Decimal.fromInt(-10)),
+      description: 'Negate positive number',
+    );
 
-    test('Negate negative number', () {
-      final expression = UnaryExpression(
+    testEval(
+      expr: UnaryExpression(
         UnaryOperator.negate,
         NumberExpression(Decimal.fromInt(-10)),
-      );
-      final result = eval(expression);
-      expect(result, equals(SuccessEval(expression, Decimal.fromInt(10))));
-    });
+      ),
+      expected: (expr) => SuccessEval(expr, Decimal.fromInt(10)),
+      description: 'Negate negative number',
+    );
 
-    test('Negate decimal number', () {
-      final expression = UnaryExpression(
+    testEval(
+      expr: UnaryExpression(
         UnaryOperator.negate,
         NumberExpression(Decimal.parse('3.14')),
-      );
-      final result = eval(expression);
-      expect(result, equals(SuccessEval(expression, Decimal.parse('-3.14'))));
-    });
+      ),
+      expected: (expr) => SuccessEval(expr, Decimal.parse('-3.14')),
+      description: 'Negate decimal number',
+    );
   });
 
   group('Binary Expressions', () {
-    test('Addition', () {
-      final expression = BinaryExpression(
+    testEval(
+      expr: BinaryExpression(
         BinaryOperator.add,
         NumberExpression(Decimal.fromInt(5)),
         NumberExpression(Decimal.fromInt(3)),
-      );
-      final result = eval(expression);
-      expect(result, equals(SuccessEval(expression, Decimal.fromInt(8))));
-    });
+      ),
+      expected: (expr) => SuccessEval(expr, Decimal.fromInt(8)),
+      description: 'Addition',
+    );
 
-    test('Subtraction', () {
-      final expression = BinaryExpression(
+    testEval(
+      expr: BinaryExpression(
         BinaryOperator.subtract,
         NumberExpression(Decimal.fromInt(10)),
         NumberExpression(Decimal.fromInt(4)),
-      );
-      final result = eval(expression);
-      expect(result, equals(SuccessEval(expression, Decimal.fromInt(6))));
-    });
+      ),
+      expected: (expr) => SuccessEval(expr, Decimal.fromInt(6)),
+      description: 'Subtraction',
+    );
 
-    test('Multiplication', () {
-      final expression = BinaryExpression(
+    testEval(
+      expr: BinaryExpression(
         BinaryOperator.multiply,
         NumberExpression(Decimal.fromInt(6)),
         NumberExpression(Decimal.fromInt(7)),
-      );
-      final result = eval(expression);
-      expect(result, equals(SuccessEval(expression, Decimal.fromInt(42))));
-    });
+      ),
+      expected: (expr) => SuccessEval(expr, Decimal.fromInt(42)),
+      description: 'Multiplication',
+    );
 
-    test('Division', () {
-      final expression = BinaryExpression(
+    testEval(
+      expr: BinaryExpression(
         BinaryOperator.divide,
         NumberExpression(Decimal.fromInt(20)),
         NumberExpression(Decimal.fromInt(5)),
-      );
-      final result = eval(expression);
-      expect(result, equals(SuccessEval(expression, Decimal.fromInt(4))));
-    });
+      ),
+      expected: (expr) => SuccessEval(expr, Decimal.fromInt(4)),
+      description: 'Division',
+    );
 
     test('Division by zero', () {
       final expression = BinaryExpression(
@@ -113,21 +127,21 @@ void main() {
       expect(error, isA<DivisionByZeroError>());
     });
 
-    test('Power', () {
-      final expression = BinaryExpression(
+    testEval(
+      expr: BinaryExpression(
         BinaryOperator.power,
         NumberExpression(Decimal.fromInt(2)),
         NumberExpression(Decimal.fromInt(3)),
-      );
-      final result = eval(expression);
-      expect(result, equals(SuccessEval(expression, Decimal.fromInt(8))));
-    });
+      ),
+      expected: (expr) => SuccessEval(expr, Decimal.fromInt(8)),
+      description: 'Power',
+    );
   });
 
   group('Complex Expressions', () {
-    test('Multiple operations', () {
+    testEval(
       // 2 + 3 * 4 - 5 should evaluate to 9
-      final expression = BinaryExpression(
+      expr: BinaryExpression(
         BinaryOperator.subtract,
         BinaryExpression(
           BinaryOperator.add,
@@ -139,14 +153,14 @@ void main() {
           ),
         ),
         NumberExpression(Decimal.fromInt(5)),
-      );
-      final result = eval(expression);
-      expect(result, equals(SuccessEval(expression, Decimal.fromInt(9))));
-    });
+      ),
+      expected: (expr) => SuccessEval(expr, Decimal.fromInt(9)),
+      description: 'Multiple operations',
+    );
 
-    test('Nested expressions', () {
+    testEval(
       // (10 - 2) * (4 + 1) should evaluate to 40
-      final expression = BinaryExpression(
+      expr: BinaryExpression(
         BinaryOperator.multiply,
         BinaryExpression(
           BinaryOperator.subtract,
@@ -158,30 +172,30 @@ void main() {
           NumberExpression(Decimal.fromInt(4)),
           NumberExpression(Decimal.fromInt(1)),
         ),
-      );
-      final result = eval(expression);
-      expect(result, equals(SuccessEval(expression, Decimal.fromInt(40))));
-    });
+      ),
+      expected: (expr) => SuccessEval(expr, Decimal.fromInt(40)),
+      description: 'Nested expressions',
+    );
   });
 
   group('Function Expressions', () {
-    test('Square', () {
-      final expression = FunctionExpression(
+    testEval(
+      expr: FunctionExpression(
         MathFunction.square,
         NumberExpression(Decimal.fromInt(5)),
-      );
-      final result = eval(expression);
-      expect(result, equals(SuccessEval(expression, Decimal.fromInt(25))));
-    });
+      ),
+      expected: (expr) => SuccessEval(expr, Decimal.fromInt(25)),
+      description: 'Square',
+    );
 
-    test('Square root', () {
-      final expression = FunctionExpression(
+    testEval(
+      expr: FunctionExpression(
         MathFunction.squareRoot,
         NumberExpression(Decimal.fromInt(16)),
-      );
-      final result = eval(expression);
-      expect(result, equals(SuccessEval(expression, Decimal.fromInt(4))));
-    });
+      ),
+      expected: (expr) => SuccessEval(expr, Decimal.fromInt(4)),
+      description: 'Square root',
+    );
 
     test('Square root of negative number', () {
       final expression = FunctionExpression(
@@ -363,10 +377,7 @@ void main() {
     test('Unmatched opening parenthesis in binary expression left operand', () {
       final expression = BinaryExpression(
         BinaryOperator.multiply,
-        ParenthesisGroupExpression(
-          NumberExpression(Decimal.fromInt(5)),
-          false,
-        ),
+        ParenthesisGroupExpression(NumberExpression(Decimal.fromInt(5)), false),
         NumberExpression(Decimal.fromInt(3)),
       );
       final result = eval(expression);
@@ -375,24 +386,27 @@ void main() {
       expect(error, isA<UnclosedParenthesisError>());
     });
 
-    test('Unmatched opening parenthesis in binary expression right operand', () {
-      final expression = BinaryExpression(
-        BinaryOperator.add,
-        NumberExpression(Decimal.fromInt(10)),
-        ParenthesisGroupExpression(
-          BinaryExpression(
-            BinaryOperator.subtract,
-            NumberExpression(Decimal.fromInt(8)),
-            NumberExpression(Decimal.fromInt(3)),
+    test(
+      'Unmatched opening parenthesis in binary expression right operand',
+      () {
+        final expression = BinaryExpression(
+          BinaryOperator.add,
+          NumberExpression(Decimal.fromInt(10)),
+          ParenthesisGroupExpression(
+            BinaryExpression(
+              BinaryOperator.subtract,
+              NumberExpression(Decimal.fromInt(8)),
+              NumberExpression(Decimal.fromInt(3)),
+            ),
+            false,
           ),
-          false,
-        ),
-      );
-      final result = eval(expression);
-      expect(result, isA<FailureEval>());
-      final error = (result as FailureEval).error;
-      expect(error, isA<UnclosedParenthesisError>());
-    });
+        );
+        final result = eval(expression);
+        expect(result, isA<FailureEval>());
+        final error = (result as FailureEval).error;
+        expect(error, isA<UnclosedParenthesisError>());
+      },
+    );
 
     test('Unmatched opening parenthesis in function argument', () {
       final expression = FunctionExpression(
@@ -411,10 +425,7 @@ void main() {
     test('Unmatched opening parenthesis in unary expression operand', () {
       final expression = UnaryExpression(
         UnaryOperator.negate,
-        ParenthesisGroupExpression(
-          NumberExpression(Decimal.fromInt(7)),
-          false,
-        ),
+        ParenthesisGroupExpression(NumberExpression(Decimal.fromInt(7)), false),
       );
       final result = eval(expression);
       expect(result, isA<FailureEval>());

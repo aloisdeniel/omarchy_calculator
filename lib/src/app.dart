@@ -7,12 +7,15 @@ import 'package:flutter_omarchy/flutter_omarchy.dart';
 import 'package:omarchy_calculator/src/widgets/shortcuts.dart';
 
 class CalculatorApp extends StatelessWidget {
-  const CalculatorApp({super.key});
+  const CalculatorApp({super.key, this.theme});
+
+  final OmarchyThemeData? theme;
 
   @override
   Widget build(BuildContext context) {
     return OmarchyApp(
       debugShowCheckedModeBanner: false,
+      theme: theme,
       home: const CalculatorPage(),
     );
   }
