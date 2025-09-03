@@ -7,8 +7,9 @@ import 'package:flutter_omarchy/flutter_omarchy.dart';
 import 'package:omarchy_calculator/src/widgets/shortcuts.dart';
 
 class CalculatorApp extends StatelessWidget {
-  const CalculatorApp({super.key, this.theme});
+  const CalculatorApp({super.key, this.theme, this.notifier});
 
+  final CalculatorNotifier? notifier;
   final OmarchyThemeData? theme;
 
   @override
@@ -16,20 +17,22 @@ class CalculatorApp extends StatelessWidget {
     return OmarchyApp(
       debugShowCheckedModeBanner: false,
       theme: theme,
-      home: const CalculatorPage(),
+      home: CalculatorPage(notifier: notifier),
     );
   }
 }
 
 class CalculatorPage extends StatefulWidget {
-  const CalculatorPage({super.key});
+  const CalculatorPage({super.key, this.notifier});
+
+  final CalculatorNotifier? notifier;
 
   @override
   State<CalculatorPage> createState() => _CalculatorPageState();
 }
 
 class _CalculatorPageState extends State<CalculatorPage> {
-  final notifier = CalculatorNotifier();
+  late final notifier = widget.notifier ?? CalculatorNotifier();
   final _mainPane = GlobalKey();
 
   final _simulatedPress = <Command, SimulatedPressController>{

@@ -2,10 +2,10 @@ import 'package:decimal/decimal.dart';
 import 'package:omarchy_calculator/src/engine/command.dart';
 import 'package:flutter/widgets.dart';
 import 'package:omarchy_calculator/src/engine/eval.dart';
+import 'package:omarchy_calculator/src/engine/eval.dart' as e;
 import 'package:omarchy_calculator/src/engine/parse.dart';
 import 'package:omarchy_calculator/src/engine/tokenize.dart';
 import 'package:omarchy_calculator/src/engine/input.dart' as ei;
-import 'package:omarchy_calculator/src/utils/expression_printer.dart';
 
 class CalculatorState {
   CalculatorState({
@@ -30,6 +30,25 @@ class CalculatorState {
         result: SuccessEval(EmptyExpression(), result ?? Decimal.zero),
         dateTime: DateTime.now(),
       );
+
+  static CalculatorState eval(int id, List<Command> commands) {
+    final isResult = commands.isNotEmpty && commands.last is Equals;
+    final tokens = tokenize(commands);
+    final rawExpression = parse(tokens);
+    final expression = evalPreviousExpressions(rawExpression);
+    final result = e.eval(expression);
+    final input = ei.input(tokens);
+    return CalculatorState(
+      id: id,
+      commands: commands,
+      input: input,
+      tokens: tokens,
+      isResult: isResult,
+      expression: expression,
+      result: result,
+      dateTime: DateTime.now(),
+    );
+  }
 
   final int id;
   final List<Command> commands;
@@ -73,26 +92,10 @@ class CalculatorNotifier extends ChangeNotifier {
       notifyListeners();
       return;
     }
-    final isResult = action is Equals;
     final commands = [...state.commands, action];
-    var tokens = tokenize(commands);
-    final rawExpression = parse(tokens);
-    final expression = evalPreviousExpressions(rawExpression);
-    final result = eval(expression);
-    final input = ei.input(tokens);
+    final newState = CalculatorState.eval(state.id + 1, commands);
 
-    final newState = CalculatorState(
-      id: state.id + 1,
-      commands: commands,
-      input: input,
-      tokens: tokens,
-      isResult: isResult,
-      expression: expression,
-      result: result,
-      dateTime: DateTime.now(),
-    );
-
-    if (isResult) {
+    if (newState.isResult) {
       _current.clear();
       _history.insert(0, newState);
     }
