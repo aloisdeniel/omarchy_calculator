@@ -73775,11 +73775,11 @@ a2O(){var s=this,r=s.e
 s.an(new A.afo(s,B.f.aN(B.b.P_(r,new A.afp(s))+1,r.length)))},
 U(a){var s,r,q,p,o,n,m=this,l=null,k=A.aqs().k(0,m.d)
 k.toString
-$label0$0:{break $label0$0}s=A.eF(a,B.yp,t.w).w
+s=A.eF(a,B.yp,t.w).w
 r=m.a
 r.toString
 q=m.f
-p=A.aqJ(0,new A.wr(new A.lH($.ax2()),new A.rm("https://github.com/basecamp/omarchy/blob/master/themes/tokyo-night/backgrounds/1-scenery-pink-lakeside-sunset-lake-landscape-scenic-panorama-7680x3215-144.png?raw=true"),B.z0,l))
+p=A.aqJ(0,new A.wr(new A.lH($.ax2()),new A.rm("/wallpapers/"+m.d+".jpg"),B.z0,l))
 s=B.eJ.L(0,new A.b7(0,0,0,s.f.d))
 o=new A.ag(1/0,1/0,1/0,1/0)
 n=t.E
