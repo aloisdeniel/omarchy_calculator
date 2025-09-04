@@ -73779,7 +73779,7 @@ s=A.eF(a,B.yp,t.w).w
 r=m.a
 r.toString
 q=m.f
-p=A.aqJ(0,new A.wr(new A.lH($.ax2()),new A.rm("/wallpapers/"+m.d+".jpg"),B.z0,l))
+p=A.aqJ(0,new A.wr(new A.lH($.ax2()),new A.rm("/omarchy_calculator/wallpapers/"+m.d+".jpg"),B.z0,l))
 s=B.eJ.L(0,new A.b7(0,0,0,s.f.d))
 o=new A.ag(1/0,1/0,1/0,1/0)
 n=t.E
