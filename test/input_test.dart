@@ -17,7 +17,7 @@ void main() {
       NumberToken('60'),
       OperatorToken(OperatorTokenType.divide),
       NumberToken('2'),
-      OperatorToken(OperatorTokenType.equals),
+      EqualsToken(),
       NumberToken('14'),
     ];
     const expected = '14';

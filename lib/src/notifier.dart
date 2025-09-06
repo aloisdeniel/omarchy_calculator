@@ -2,6 +2,7 @@ import 'package:decimal/decimal.dart';
 import 'package:omarchy_calculator/src/engine/command.dart';
 import 'package:flutter/widgets.dart';
 import 'package:omarchy_calculator/src/engine/eval.dart';
+import 'package:omarchy_calculator/src/engine/eval.dart' as e;
 import 'package:omarchy_calculator/src/engine/parse.dart';
 import 'package:omarchy_calculator/src/engine/tokenize.dart';
 import 'package:omarchy_calculator/src/engine/input.dart' as ei;
@@ -15,6 +16,7 @@ class CalculatorState {
     required this.expression,
     required this.result,
     required this.dateTime,
+    required this.isResult,
   });
 
   factory CalculatorState.empty({int id = 0, Decimal? result}) =>
@@ -23,10 +25,31 @@ class CalculatorState {
         commands: [],
         tokens: [],
         input: '',
+        isResult: false,
         expression: const EmptyExpression(),
         result: SuccessEval(EmptyExpression(), result ?? Decimal.zero),
         dateTime: DateTime.now(),
       );
+
+  static CalculatorState eval(int id, List<Command> commands) {
+    final effectiveTokens = tokenize(commands);
+    final isResult =
+        effectiveTokens.isNotEmpty && effectiveTokens.last is EqualsToken;
+    final rawExpression = parse(effectiveTokens);
+    final expression = evalPreviousExpressions(rawExpression);
+    final result = e.eval(expression);
+    final input = ei.input(effectiveTokens);
+    return CalculatorState(
+      id: id,
+      commands: commands,
+      input: input,
+      tokens: effectiveTokens,
+      isResult: isResult,
+      expression: expression,
+      result: result,
+      dateTime: DateTime.now(),
+    );
+  }
 
   final int id;
   final List<Command> commands;
@@ -35,12 +58,28 @@ class CalculatorState {
   final EvalResult result;
   final DateTime dateTime;
   final String input;
+  final bool isResult;
+
+  CalculatorState copyWith({int? id, String? input}) {
+    return CalculatorState(
+      id: id ?? this.id,
+      input: input ?? this.input,
+      tokens: tokens,
+      expression: expression,
+      result: result,
+      dateTime: dateTime,
+      isResult: isResult,
+      commands: commands,
+    );
+  }
 }
 
 class CalculatorNotifier extends ChangeNotifier {
   final List<CalculatorState> _current = <CalculatorState>[
     CalculatorState.empty(),
   ];
+
+  Decimal _memory = Decimal.zero;
 
   final List<CalculatorState> _history = <CalculatorState>[];
 
@@ -49,37 +88,62 @@ class CalculatorNotifier extends ChangeNotifier {
   List<CalculatorState> get history => _history;
 
   void execute(Command action) {
+    if (action is Memory) {
+      switch (action) {
+        case MemoryAdd():
+          _memory += switch (state.result) {
+            SuccessEval(:final result) => result,
+            FailureEval() => Decimal.zero,
+          };
+        case MemorySubtract():
+          _memory -= switch (state.result) {
+            SuccessEval(:final result) => result,
+            FailureEval() => Decimal.zero,
+          };
+        case MemoryRecall():
+          var commands = [...state.commands];
+          if (state.tokens.isNotEmpty && state.tokens.last is NumberToken) {
+            commands.add(Command.operator(OperatorType.multiply));
+          }
+          commands.addAll(Command.parse(_memory.toString()));
+          final newState = CalculatorState.eval(state.id + 1, commands);
+          _current.add(newState);
+          notifyListeners();
+          return;
+        case MemoryClear():
+          _memory = Decimal.zero;
+          return;
+      }
+    }
     if (action is ClearAll) {
-      _current.add(CalculatorState.empty(id: state.id + 1));
+      final newId = state.id + 1;
+      _current.clear();
+      _current.add(CalculatorState.empty(id: newId));
       notifyListeners();
       return;
     }
     final commands = [...state.commands, action];
-    var tokens = tokenize(commands);
-    final rawExpression = parse(tokens);
-    final expression = evalPreviousExpressions(rawExpression);
-    final result = eval(expression);
-    final input = ei.input(tokens);
+    final newState = CalculatorState.eval(state.id + 1, commands);
 
-    final newState = CalculatorState(
-      id: state.id + 1,
-      commands: commands,
-      input: input,
-      tokens: tokens,
-      expression: expression,
-      result: result,
-      dateTime: DateTime.now(),
-    );
-    _current.add(newState);
-    if (action is Equals) {
+    if (newState.isResult) {
+      _current.clear();
       _history.insert(0, newState);
     }
+
+    _current.add(newState);
 
     notifyListeners();
   }
 
   void clearHistory() {
     _history.clear();
+    notifyListeners();
+  }
+
+  void restore(CalculatorState state) {
+    final newId = this.state.id + 1;
+    _current.clear();
+    _current.add(state.copyWith(id: newId, input: ''));
     notifyListeners();
   }
 }

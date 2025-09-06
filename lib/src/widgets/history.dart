@@ -58,8 +58,8 @@ class HistoryPane extends StatelessWidget {
               children: [
                 OmarchyButton(
                   style: OmarchyButtonStyle.filled(AnsiColor.red),
-                  child: Text('Clear'),
                   onPressed: onClear,
+                  child: Text('Clear'),
                 ),
               ],
             ),
@@ -70,8 +70,69 @@ class HistoryPane extends StatelessWidget {
   }
 }
 
+class _Items extends StatelessWidget {
+  const _Items({required this.history, required this.onSelect});
+
+  final ValueChanged<CalculatorState> onSelect;
+  final List<CalculatorState> history;
+
+  @override
+  Widget build(BuildContext context) {
+    final groupedByDay = <(DateTime, List<CalculatorState>)>[];
+
+    for (final item in history) {
+      final day = DateTime(
+        item.dateTime.year,
+        item.dateTime.month,
+        item.dateTime.day,
+      );
+
+      final index = groupedByDay.indexWhere((e) => e.$1 == day);
+      if (index == -1) {
+        groupedByDay.add((day, [item]));
+      } else {
+        groupedByDay[index].$2.add(item);
+      }
+    }
+
+    return ListView(
+      padding: const EdgeInsets.only(bottom: 64),
+      children: [
+        for (final (date, items) in groupedByDay) ...[
+          _HeaderTile(date),
+          for (final item in items)
+            FadeIn(
+              key: ValueKey(item.id),
+              child: _HistoryTile(item, onTap: () => onSelect(item)),
+            ),
+        ],
+      ],
+    );
+  }
+}
+
+class _HeaderTile extends StatelessWidget {
+  const _HeaderTile(this.date);
+
+  final DateTime date;
+
+  @override
+  Widget build(BuildContext context) {
+    return Padding(
+      padding: EdgeInsets.all(14),
+      child: Text(
+        DateFormat.yMMMMd().format(date).toUpperCase(),
+        style: OmarchyTheme.of(context).text.bold.copyWith(
+          fontSize: 14,
+          color: OmarchyTheme.of(context).colors.normal.white,
+        ),
+      ),
+    );
+  }
+}
+
 class _HistoryTile extends StatelessWidget {
-  const _HistoryTile(this.item, {super.key, required this.onTap});
+  const _HistoryTile(this.item, {required this.onTap});
 
   final CalculatorState item;
   final VoidCallback onTap;
@@ -85,11 +146,7 @@ class _HistoryTile extends StatelessWidget {
       spacing: 2,
       children: [
         Text(
-          DateFormat.Hm().format(item.dateTime) +
-              ' ' +
-              DateFormat.s().format(item.dateTime) +
-              ' • ' +
-              DateFormat.Md().format(item.dateTime),
+          DateFormat.Hm().format(item.dateTime),
           style: theme.text.normal.copyWith(
             color: theme.colors.bright.black,
             fontSize: 11,
@@ -136,27 +193,6 @@ class _HistoryTile extends StatelessWidget {
           ),
         );
       },
-    );
-  }
-}
-
-class _Items extends StatelessWidget {
-  const _Items({required this.history, required this.onSelect});
-
-  final ValueChanged<CalculatorState> onSelect;
-  final List<CalculatorState> history;
-
-  @override
-  Widget build(BuildContext context) {
-    return ListView(
-      padding: const EdgeInsets.only(bottom: 64),
-      children: [
-        for (final item in history)
-          FadeIn(
-            key: ValueKey(item.id),
-            child: _HistoryTile(item, onTap: () => onSelect(item)),
-          ),
-      ],
     );
   }
 }

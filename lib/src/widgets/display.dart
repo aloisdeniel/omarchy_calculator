@@ -12,74 +12,86 @@ class Display extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final theme = OmarchyTheme.of(context);
-    return LayoutBuilder(
-      builder: (context, layout) {
-        return Column(
-          crossAxisAlignment: CrossAxisAlignment.end,
-          children: [
-            Stack(
-              children: [
-                SingleChildScrollView(
-                  reverse: true,
-                  scrollDirection: Axis.horizontal,
-                  padding: const EdgeInsets.symmetric(horizontal: 14.0),
-                  child: ExpressionView(
-                    key: Key('details'),
-                    state,
-                    fontSize: isCondensed ? 14 : 22,
-                  ),
-                ),
-                Positioned(
-                  left: 0,
-                  top: 0,
-                  bottom: 0,
-                  width: 28,
-                  child: Container(
-                    decoration: BoxDecoration(
-                      gradient: LinearGradient(
-                        colors: [
-                          theme.colors.background,
-                          theme.colors.background.withValues(alpha: 0),
-                        ],
+    return SizedBox(
+      height: isCondensed ? 72 : 134,
+      child: LayoutBuilder(
+        builder: (context, layout) {
+          return Column(
+            crossAxisAlignment: CrossAxisAlignment.end,
+            children: [
+              Stack(
+                children: [
+                  ConstrainedBox(
+                    constraints: BoxConstraints(
+                      minWidth: layout.maxWidth,
+                      maxWidth: double.infinity,
+                    ),
+                    child: AnimatedOpacity(
+                      duration: const Duration(milliseconds: 200),
+                      opacity: state.isResult ? 0.5 : 1,
+                      child: SingleChildScrollView(
+                        reverse: true,
+                        scrollDirection: Axis.horizontal,
+                        padding: const EdgeInsets.symmetric(horizontal: 14.0),
+                        child: ExpressionView(
+                          key: Key('details'),
+                          state,
+                          fontSize: isCondensed ? 14 : 22,
+                        ),
                       ),
                     ),
                   ),
-                ),
-                Positioned(
-                  right: 0,
-                  top: 0,
-                  bottom: 0,
-                  width: 14,
-                  child: Container(
-                    decoration: BoxDecoration(
-                      gradient: LinearGradient(
-                        colors: [
-                          theme.colors.background.withValues(alpha: 0),
-                          theme.colors.background,
-                        ],
+                  Positioned(
+                    left: 0,
+                    top: 0,
+                    bottom: 0,
+                    width: 28,
+                    child: Container(
+                      decoration: BoxDecoration(
+                        gradient: LinearGradient(
+                          colors: [
+                            theme.colors.background,
+                            theme.colors.background.withValues(alpha: 0),
+                          ],
+                        ),
                       ),
                     ),
                   ),
-                ),
-              ],
-            ),
-            Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 14.0),
-              child: _ResultDisplay(
-                key: Key('result'),
-                state,
-                isCondensed: isCondensed,
+                  Positioned(
+                    right: 0,
+                    top: 0,
+                    bottom: 0,
+                    width: 14,
+                    child: Container(
+                      decoration: BoxDecoration(
+                        gradient: LinearGradient(
+                          colors: [
+                            theme.colors.background.withValues(alpha: 0),
+                            theme.colors.background,
+                          ],
+                        ),
+                      ),
+                    ),
+                  ),
+                ],
               ),
-            ),
-          ],
-        );
-      },
+              Expanded(
+                key: Key('result'),
+                child: Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 14.0),
+                  child: _ResultDisplay(state, isCondensed: isCondensed),
+                ),
+              ),
+            ],
+          );
+        },
+      ),
     );
   }
 }
 
 class _ResultDisplay extends StatelessWidget {
-  const _ResultDisplay(this.state, {super.key, required this.isCondensed});
+  const _ResultDisplay(this.state, {required this.isCondensed});
 
   final CalculatorState state;
   final bool isCondensed;
@@ -87,14 +99,23 @@ class _ResultDisplay extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final theme = OmarchyTheme.of(context);
+    final text = switch (state.result) {
+      FailureEval(:final error) => error.toString(),
+      SuccessEval() when state.input.isNotEmpty => state.input,
+      SuccessEval(:final result) => result.toString(),
+    };
+    final color = switch (state.result) {
+      FailureEval() => theme.colors.bright.red,
+      SuccessEval() when state.isResult => theme.colors.bright.green,
+      SuccessEval() => null,
+    };
     return FittedBox(
+      key: ValueKey(color),
       child: SelectableText(
-        switch (state.result) {
-          FailureEval(:final error) => error.toString(),
-          SuccessEval() when state.input.isNotEmpty => state.input,
-          SuccessEval(:final result) => result.toString(),
-        },
-        style: TextStyle(fontSize: isCondensed ? 48 : 88),
+        text,
+        style: TextStyle(
+          fontSize: isCondensed ? 48 : 88,
+        ).copyWith(color: color),
         maxLines: 1,
         cursorColor: theme.colors.normal.white,
         selectionColor: theme.colors.normal.white,
