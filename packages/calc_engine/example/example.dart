@@ -7,7 +7,7 @@ void main() {
   final expression = parse(context, tokens);
   final result = eval(context, expression);
   switch (result) {
-    case SuccessEval(:final result):
+    case SuccessEval(:final Decimal result):
       print('Success: $result'); // Output: Success: -27
     case FailureEval(:final error):
       print('Failed: $error');

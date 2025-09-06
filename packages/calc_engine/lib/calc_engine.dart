@@ -1,5 +1,7 @@
 library;
 
+export 'package:decimal/decimal.dart';
+
 export 'src/commands.dart';
 export 'src/constants.dart';
 export 'src/context.dart';

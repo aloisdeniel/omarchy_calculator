@@ -1,155 +1,168 @@
-import 'package:omarchy_calculator/src/engine/command.dart';
-import 'package:omarchy_calculator/src/notifier.dart';
-import 'package:omarchy_calculator/src/widgets/buttons.dart';
-import 'package:omarchy_calculator/src/widgets/display.dart';
-import 'package:omarchy_calculator/src/widgets/history.dart';
+import 'dart:async';
+
+import 'package:omarchy_calculator/src/features/calculator/screen.dart';
+import 'package:omarchy_calculator/src/features/calculator/state/event.dart';
+import 'package:omarchy_calculator/src/features/calculator/state/notifier.dart';
+import 'package:omarchy_calculator/src/features/config/state/config.dart';
+import 'package:omarchy_calculator/src/features/config/state/notifier.dart';
+import 'package:omarchy_calculator/src/features/history/screen.dart';
 import 'package:flutter_omarchy/flutter_omarchy.dart';
+import 'package:omarchy_calculator/src/features/history/state/notifier.dart';
 import 'package:omarchy_calculator/src/widgets/shortcuts.dart';
 
-class CalculatorApp extends StatelessWidget {
-  const CalculatorApp({super.key, this.theme, this.notifier});
+class CalculatorApp extends StatefulWidget {
+  const CalculatorApp({
+    super.key,
+    this.theme,
+    this.config,
+    this.calculator,
+    this.history,
+  });
 
-  final CalculatorNotifier? notifier;
+  final CalculatorNotifier? calculator;
+  final HistoryNotifier? history;
+  final ConfigNotifier? config;
   final OmarchyThemeData? theme;
 
   @override
-  Widget build(BuildContext context) {
-    return OmarchyApp(
-      debugShowCheckedModeBanner: false,
-      theme: theme,
-      home: CalculatorPage(notifier: notifier),
-    );
-  }
+  State<CalculatorApp> createState() => _CalculatorAppState();
 }
 
-class CalculatorPage extends StatefulWidget {
-  const CalculatorPage({super.key, this.notifier});
-
-  final CalculatorNotifier? notifier;
-
-  @override
-  State<CalculatorPage> createState() => _CalculatorPageState();
-}
-
-class _CalculatorPageState extends State<CalculatorPage> {
-  late final notifier = widget.notifier ?? CalculatorNotifier();
-  final _mainPane = GlobalKey();
-
-  final _simulatedPress = <Command, SimulatedPressController>{
-    for (final row in ButtonGrid.rows)
-      for (final action in row) action: SimulatedPressController(),
-  };
+class _CalculatorAppState extends State<CalculatorApp> {
+  late final calculator = widget.calculator ?? CalculatorNotifier();
+  late final history = widget.history ?? HistoryNotifier();
+  late final config = widget.config ?? ConfigNotifier();
 
   @override
   void dispose() {
+    calculator.dispose();
+    history.dispose();
+    config.dispose();
     super.dispose();
-    for (final controller in _simulatedPress.values) {
-      controller.dispose();
-    }
   }
 
   @override
   Widget build(BuildContext context) {
-    final theme = OmarchyTheme.of(context);
-    return AppShortcuts(
-      onCommand: (command) {
-        final sim = _simulatedPress[command];
-        sim?.press();
-        notifier.execute(command);
-      },
-      child: AnimatedBuilder(
-        animation: notifier,
-        builder: (context, _) {
-          return OmarchyScaffold(
-            child: LayoutBuilder(
-              builder: (context, layout) {
-                if (layout.maxWidth < 40 || layout.maxHeight < 84) {
-                  return Center(
-                    child: Icon(
-                      OmarchyIcons.faMaximize,
-                      color: theme.colors.normal.black,
-                    ),
-                  );
-                }
-                Widget child = Column(
-                  key: _mainPane,
-                  crossAxisAlignment: CrossAxisAlignment.stretch,
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    const SizedBox(height: 14),
-                    Display(
-                      state: notifier.state,
-                      isCondensed: layout.maxHeight < 1000,
-                    ),
-                    if (layout.maxWidth > 100 && layout.maxHeight > 220) ...[
-                      const SizedBox(height: 14),
-                      Expanded(
-                        child: Padding(
-                          padding: const EdgeInsets.only(
-                            left: 14.0,
-                            right: 14.0,
-                            bottom: 14.0,
-                          ),
-                          child: ButtonGrid(
-                            simulated: _simulatedPress,
-                            onPressed: (action) {
-                              setState(() {
-                                notifier.execute(action);
-                              });
-                            },
-                          ),
-                        ),
-                      ),
-                    ],
-                  ],
-                );
-
-                if (layout.maxWidth > 1200) {
-                  child = Row(
-                    children: [
-                      Expanded(
-                        child: FadeIn(
-                          child: HistoryPane(
-                            history: notifier.history,
-                            onSelect: (v) {
-                              notifier.restore(v);
-                            },
-                            onClear: notifier.history.isNotEmpty
-                                ? () {
-                                    notifier.clearHistory();
-                                  }
-                                : null,
-                          ),
-                        ),
-                      ),
-                      OmarchyDivider.horizontal(),
-                      SizedBox(width: 1000, child: child),
-                    ],
-                  );
-                }
-
-                return child;
-              },
-            ),
-          );
-        },
+    return NotifiersScope(
+      calculator: calculator,
+      history: history,
+      child: OmarchyApp(
+        debugShowCheckedModeBanner: false,
+        theme: widget.theme,
+        home: const AppLayout(),
       ),
     );
   }
 }
 
-class CommandIntent extends Intent {
-  const CommandIntent(this.command);
-  final Command command;
-}
-
-class CommandAction extends Action<CommandIntent> {
-  CommandAction(this.simulatedPress);
-
-  final Map<Command, SimulatedPressController> simulatedPress;
+class AppLayout extends StatefulWidget {
+  const AppLayout({super.key});
 
   @override
-  void invoke(covariant CommandIntent intent) {
-    simulatedPress[intent.command]?.press();
+  State<AppLayout> createState() => _AppLayoutState();
+}
+
+class _AppLayoutState extends State<AppLayout> {
+  final layouts = [ButtonLayout.base(), ButtonLayout.scientific()];
+  final _mainPane = GlobalKey();
+  NotifiersScope? scope;
+  StreamSubscription<CalculatorEvent>? _calculatorEvents;
+
+  void _onCalculatorEvent(CalculatorEvent event) {
+    if (event is CalculatorCalculateResultEvent) {
+      scope?.history.addToHistory(event.state);
+    }
   }
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+
+    _calculatorEvents?.cancel();
+    scope = NotifiersScope.of(context);
+    _calculatorEvents = scope?.calculator.events.listen(_onCalculatorEvent);
+  }
+
+  @override
+  void dispose() {
+    super.dispose();
+    _calculatorEvents?.cancel();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = OmarchyTheme.of(context);
+    final scope = NotifiersScope.of(context);
+    return AppShortcuts(
+      onCommand: (command) {
+        scope.calculator.execute(command);
+      },
+      child: OmarchyScaffold(
+        child: LayoutBuilder(
+          builder: (context, layout) {
+            if (layout.maxWidth < 40 || layout.maxHeight < 84) {
+              return Center(
+                child: Icon(
+                  OmarchyIcons.faMaximize,
+                  color: theme.colors.normal.black,
+                ),
+              );
+            }
+            final isHistoryAlwaysVisible =
+                layout.maxWidth >
+                layouts.length * CalculatorScreen.gridWidth + 500;
+            final calc = CalculatorScreen(
+              onOpenHistory: !isHistoryAlwaysVisible
+                  ? () {
+                      // TODO:
+                    }
+                  : null,
+              layouts: layouts,
+            );
+            if (isHistoryAlwaysVisible) {
+              return Row(
+                children: [
+                  Expanded(
+                    child: FadeIn(
+                      child: HistoryScreen(
+                        onSelect: (v) {
+                          scope.calculator.restore(v);
+                        },
+                      ),
+                    ),
+                  ),
+                  OmarchyDivider.horizontal(),
+                  SizedBox(key: _mainPane, width: 1000, child: calc),
+                ],
+              );
+            }
+            return calc;
+          },
+        ),
+      ),
+    );
+  }
+}
+
+class NotifiersScope extends InheritedWidget {
+  const NotifiersScope({
+    super.key,
+    required super.child,
+    required this.calculator,
+    required this.history,
+  });
+  final CalculatorNotifier calculator;
+  final HistoryNotifier history;
+
+  static NotifiersScope of(BuildContext context) {
+    final scope = context.dependOnInheritedWidgetOfExactType<NotifiersScope>();
+    if (scope == null) {
+      throw Exception('No NotifiersScope found in context');
+    }
+    return scope;
+  }
+
+  @override
+  bool updateShouldNotify(covariant NotifiersScope oldWidget) =>
+      calculator != oldWidget.calculator || history != oldWidget.history;
 }

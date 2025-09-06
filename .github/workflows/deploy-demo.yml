@@ -24,11 +24,12 @@ jobs:
       
       - name: Build web
         run: |
+          cd packages/omarchy_calculator
           flutter pub get
           flutter build web --release --wasm --no-tree-shake-icons --base-href /omarchy_calculator/ 
       
       - name: Deploy to GitHub Pages
         uses: JamesIves/github-pages-deploy-action@v4
         with:
-          folder: build/web
+          folder: packages/omarchy_calculator/build/web
           branch: gh-pages

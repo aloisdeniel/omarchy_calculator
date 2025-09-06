@@ -14,19 +14,9 @@
       "42"
     ],
     [
-      "undefined",
-      "!undefined",
-      "[ERR]:Unknown constant"
-    ],
-    [
       "3 #incr #incr",
-      "incr(incr(3))",
+      "incr{incr{3}}",
       "5"
-    ],
-    [
-      "3 #undefined",
-      "!undefined(3)",
-      "[ERR]:Unknown function"
     ]
   ]
 }

@@ -45,6 +45,7 @@ sealed class Command {
             name.write(input[i]);
             i++;
           }
+          i--; // Adjust for the main loop increment
           commands.add(FunctionCommand(name.toString()));
         default:
           final patterns = {
@@ -80,6 +81,7 @@ sealed class Command {
               name.write(input[i]);
               i++;
             }
+            i--;
             commands.add(ConstantCommand(name.toString()));
           }
       }

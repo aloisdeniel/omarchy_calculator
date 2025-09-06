@@ -1,7 +1,7 @@
+import 'package:calc_engine/calc_engine.dart';
 import 'package:flutter/material.dart' show SelectableText;
 import 'package:flutter_omarchy/flutter_omarchy.dart';
-import 'package:omarchy_calculator/src/engine/eval.dart';
-import 'package:omarchy_calculator/src/notifier.dart';
+import 'package:omarchy_calculator/src/features/calculator/state/notifier.dart';
 import 'package:omarchy_calculator/src/widgets/expression.dart';
 
 class Display extends StatelessWidget {
@@ -36,7 +36,7 @@ class Display extends StatelessWidget {
                         child: ExpressionView(
                           key: Key('details'),
                           state,
-                          fontSize: isCondensed ? 14 : 22,
+                          fontSize: isCondensed ? 16 : 24,
                         ),
                       ),
                     ),

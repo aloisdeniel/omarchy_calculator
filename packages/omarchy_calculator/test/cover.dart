@@ -17,7 +17,7 @@ class OmarchyCalculatorCover extends StatelessWidget {
       text: OmarchyTextStyleData.fallback(),
     );
     final app = CalculatorApp(
-      notifier: CalculatorGoldenNotifier(input: '1+2', id: 0, history: []),
+      calculator: CalculatorGoldenNotifier(input: '1+2', id: 0),
       theme: theme,
     );
     return LayoutBuilder(

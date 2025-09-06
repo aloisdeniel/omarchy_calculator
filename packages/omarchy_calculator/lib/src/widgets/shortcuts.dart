@@ -1,7 +1,7 @@
+import 'package:calc_engine/calc_engine.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter/widgets.dart';
-import 'package:omarchy_calculator/src/engine/command.dart';
 
 class AppShortcuts extends StatefulWidget {
   const AppShortcuts({
@@ -26,7 +26,7 @@ class AppShortcuts extends StatefulWidget {
     LogicalKeyboardKey.parenthesisRight: Command.closeParenthesis(),
     LogicalKeyboardKey.comma: Command.decimalPoint(),
     LogicalKeyboardKey.period: Command.decimalPoint(),
-    LogicalKeyboardKey.percent: Command.percent(),
+    LogicalKeyboardKey.percent: Command.function('percent'),
     LogicalKeyboardKey.equal: Command.equals(),
     LogicalKeyboardKey.enter: Command.equals(),
     LogicalKeyboardKey.numpadEqual: Command.equals(),

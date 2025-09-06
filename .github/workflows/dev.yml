@@ -25,6 +25,7 @@ jobs:
 
       - name: Install build dependencies
         run: |
+          cd packages/omarchy_calculator
           sudo apt-get update
           sudo apt-get install -y \
             clang cmake ninja-build pkg-config libgtk-3-dev liblzma-dev curl git
@@ -37,22 +38,27 @@ jobs:
 
       - name: Flutter init
         run: |
+          cd packages/omarchy_calculator
           flutter --version
           flutter doctor -v
           flutter config --enable-linux-desktop
           flutter pub get
 
       - name: Flutter tests
-        run: flutter test --dart-define="ignore-goldens=true"
+        run: |
+          cd packages/omarchy_calculator
+          flutter test --dart-define="ignore-goldens=true"
 
       - name: Build Linux (release)
-        run: flutter build linux --release
+        run: |
+          cd packages/omarchy_calculator
+          flutter build linux --release
 
       - name: Create archive
         run: |
-          cd build/linux/${{ matrix.arch }}/release/bundle/
+          cd packages/omarchy_calculator/build/linux/${{ matrix.arch }}/release/bundle/
           tar -czf omarchy_calculator-${{ github.ref_name }}-${{ matrix.arch }}.tar.gz omarchy_calculator
-          mv omarchy_calculator-${{ github.ref_name }}-${{ matrix.arch }}.tar.gz ../../../
+          mv omarchy_calculator-${{ github.ref_name }}-${{ matrix.arch }}.tar.gz ../../../../../
 
       - name: Upload artifact
         uses: actions/upload-artifact@v4

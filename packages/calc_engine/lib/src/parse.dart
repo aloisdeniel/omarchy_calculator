@@ -217,6 +217,37 @@ class _Parser {
         _index++;
         return ParenthesisGroupExpression(inner, true);
 
+      case FunctionToken(:final function):
+        final found = context.findFunction(function);
+        final inner = readAddSubExpression(lastExpression);
+
+        if (inner == null) {
+          const arg = EmptyExpression();
+          return switch (found) {
+            MathFunction() => FunctionExpression(found, arg, isClosed: false),
+            null => UnknownFunctionExpression(
+              token.function,
+              arg,
+              isClosed: false,
+            ),
+          };
+        }
+
+        final following = peekToken();
+        if (following == null ||
+            following is! ParenthesisToken ||
+            following.isOpen) {
+          return switch (found) {
+            MathFunction() => FunctionExpression(found, inner, isClosed: false),
+            null => UnknownFunctionExpression(function, inner, isClosed: false),
+          };
+        }
+        _index++;
+        return switch (found) {
+          MathFunction() => FunctionExpression(found, inner, isClosed: true),
+          null => UnknownFunctionExpression(function, inner, isClosed: true),
+        };
+
       default:
         return null;
     }
@@ -413,7 +444,7 @@ class PreviousResultExpression extends Expression {
 
   @override
   String toString() {
-    return '(=> $expression)';
+    return '[=> $expression]';
   }
 }
 
@@ -438,7 +469,7 @@ class UnaryExpression extends Expression {
 
   @override
   String toString() {
-    return '(${operator.symbol} $operand)';
+    return '[${operator.symbol} $operand]';
   }
 }
 
@@ -489,7 +520,7 @@ class BinaryExpression extends Expression {
 
   @override
   String toString() {
-    return '($left ${operator.symbol} $right)';
+    return '[$left ${operator.symbol} $right]';
   }
 }
 
@@ -516,14 +547,20 @@ class ParenthesisGroupExpression extends Expression {
 }
 
 class FunctionExpression extends Expression {
-  const FunctionExpression(this.function, this.argument);
+  const FunctionExpression(
+    this.function,
+    this.argument, {
+    this.isClosed = true,
+  });
   final MathFunction function;
   final Expression argument;
+  final bool isClosed;
 
   @override
   bool operator ==(Object other) {
     if (identical(this, other)) return true;
     return other is FunctionExpression &&
+        other.isClosed == isClosed &&
         other.function == function &&
         other.argument == argument;
   }
@@ -533,19 +570,24 @@ class FunctionExpression extends Expression {
 
   @override
   String toString() {
-    return '${function.name}($argument)';
+    return '${function.name}{$argument}';
   }
 }
 
 class UnknownFunctionExpression extends Expression {
-  const UnknownFunctionExpression(this.function, this.argument);
+  const UnknownFunctionExpression(
+    this.function,
+    this.argument, {
+    this.isClosed = true,
+  });
   final String function;
   final Expression argument;
-
+  final bool isClosed;
   @override
   bool operator ==(Object other) {
     if (identical(this, other)) return true;
     return other is UnknownFunctionExpression &&
+        other.isClosed == isClosed &&
         other.function == function &&
         other.argument == argument;
   }
@@ -555,6 +597,6 @@ class UnknownFunctionExpression extends Expression {
 
   @override
   String toString() {
-    return '!$function($argument)';
+    return '!$function{$argument}';
   }
 }

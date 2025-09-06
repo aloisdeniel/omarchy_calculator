@@ -1,9 +1,8 @@
+import 'package:calc_engine/calc_engine.dart';
 import 'package:flutter_omarchy/flutter_omarchy.dart';
-import 'package:omarchy_calculator/src/engine/base.dart';
-import 'package:omarchy_calculator/src/engine/eval.dart';
-import 'package:omarchy_calculator/src/engine/parse.dart';
-import 'package:omarchy_calculator/src/notifier.dart';
+import 'package:omarchy_calculator/src/features/calculator/state/notifier.dart';
 
+/// A widget that displays a mathematical expression with syntax highlighting.
 class ExpressionView extends StatelessWidget {
   const ExpressionView(
     this.state, {
@@ -24,7 +23,7 @@ class ExpressionView extends StatelessWidget {
     return Text.rich(
       TextSpan(
         children: [
-          formatExpression(theme, state.expression),
+          formatExpression(state.context, fontSize, theme, state.expression),
           if (withResult)
             switch (state.result) {
               SuccessEval(:final result) => TextSpan(
@@ -54,78 +53,151 @@ class ExpressionView extends StatelessWidget {
   }
 }
 
-TextSpan formatExpression(OmarchyThemeData theme, Expression expr) {
+TextSpan formatExpression(
+  CalcContext context,
+  double fontSize,
+  OmarchyThemeData theme,
+  Expression expr,
+) {
   return switch (expr) {
     ParenthesisGroupExpression(:final expression) => TextSpan(
       children: [
         TextSpan(
           text: '(',
-          style: theme.text.normal.copyWith(color: theme.colors.normal.white),
+          style: theme.text.normal.copyWith(
+            fontSize: fontSize,
+            color: theme.colors.normal.white,
+          ),
         ),
-        formatExpression(theme, expression),
+        formatExpression(context, fontSize, theme, expression),
         if (expr.isClosed)
           TextSpan(
             text: ')',
-            style: theme.text.normal.copyWith(color: theme.colors.normal.white),
+            style: theme.text.normal.copyWith(
+              fontSize: fontSize,
+              color: theme.colors.normal.white,
+            ),
           ),
       ],
     ),
     BinaryExpression(:final operator, :final left, :final right) => TextSpan(
       children: [
-        formatExpression(theme, left),
+        formatExpression(context, fontSize, theme, left),
         TextSpan(
           text: ' ${operator.symbol} ',
 
-          style: theme.text.bold.copyWith(color: theme.colors.bright.yellow),
+          style: theme.text.bold.copyWith(
+            fontSize: fontSize,
+            color: theme.colors.bright.yellow,
+          ),
         ),
-        formatExpression(theme, right),
+        formatExpression(context, fontSize, theme, right),
       ],
     ),
     UnaryExpression(:final operator, :final operand) => TextSpan(
       children: [
         TextSpan(
           text: operator.symbol,
-          style: theme.text.bold.copyWith(color: theme.colors.bright.yellow),
+          style: theme.text.bold.copyWith(
+            fontSize: fontSize,
+            color: theme.colors.bright.yellow,
+          ),
         ),
-        formatExpression(theme, operand),
+        formatExpression(context, fontSize, theme, operand),
       ],
     ),
     NumberExpression(:final value) => TextSpan(
       text: value.toString(),
-      style: theme.text.normal.copyWith(color: theme.colors.foreground),
+      style: theme.text.normal.copyWith(
+        fontSize: fontSize,
+        color: theme.colors.foreground,
+      ),
     ),
     ConstantExpression(:final name) => TextSpan(
-      text: name.toString(),
-      style: theme.text.normal.copyWith(color: theme.colors.bright.cyan),
-    ),
-    FunctionExpression(:final function, :final argument) => switch (function) {
-      MathFunction.square => TextSpan(
-        children: [
-          formatExpression(theme, argument),
-          TextSpan(text: '²'),
-        ],
+      text: name.name,
+      style: theme.text.normal.copyWith(
+        fontSize: fontSize,
+        color: theme.colors.bright.cyan,
       ),
-      _ => TextSpan(
+    ),
+    UnknownConstantExpression(:final name) => TextSpan(
+      text: name,
+      style: theme.text.normal.copyWith(
+        fontSize: fontSize,
+        color: theme.colors.bright.red,
+      ),
+    ),
+    FunctionExpression(:final function, :final argument, :final isClosed) =>
+      switch (function) {
+        _ when function.name == '²' => TextSpan(
+          children: [
+            formatExpression(context, fontSize, theme, argument),
+            TextSpan(text: '²'),
+          ],
+        ),
+        _ => TextSpan(
+          children: [
+            TextSpan(
+              text: function.name,
+              style: theme.text.bold.copyWith(
+                fontSize: fontSize,
+                color: theme.colors.bright.blue,
+              ),
+            ),
+            TextSpan(
+              text: '(',
+              style: TextStyle(
+                fontSize: fontSize,
+                color: isClosed ? null : theme.colors.bright.black,
+              ),
+            ),
+            formatExpression(context, fontSize, theme, argument),
+            if (isClosed)
+              TextSpan(
+                text: ')',
+                style: TextStyle(fontSize: fontSize),
+              ),
+          ],
+        ),
+      },
+    UnknownFunctionExpression(
+      :final function,
+      :final argument,
+      :final isClosed,
+    ) =>
+      TextSpan(
         children: [
           TextSpan(
-            text: function.toString(),
-            style: theme.text.bold.copyWith(color: theme.colors.bright.blue),
+            text: function,
+            style: theme.text.bold.copyWith(
+              fontSize: fontSize,
+              color: theme.colors.bright.red,
+            ),
           ),
-          const TextSpan(text: '('),
-          formatExpression(theme, argument),
-          const TextSpan(text: ')'),
+
+          TextSpan(
+            text: '(',
+            style: TextStyle(
+              fontSize: fontSize,
+              color: isClosed ? null : theme.colors.bright.black,
+            ),
+          ),
+          formatExpression(context, fontSize, theme, argument),
+          if (isClosed) const TextSpan(text: ')'),
         ],
       ),
-    },
     EmptyExpression() => const TextSpan(text: ''),
     PreviousResultExpression(:final expression, :final result) => TextSpan(
       text: result != null
           ? result.toString()
-          : switch (eval(expression)) {
+          : switch (eval(context, expression)) {
               SuccessEval(:final result) => result.toString(),
               FailureEval() => '[ERR]',
             },
-      style: theme.text.italic.copyWith(color: theme.colors.normal.green),
+      style: theme.text.italic.copyWith(
+        fontSize: fontSize,
+        color: theme.colors.normal.green,
+      ),
     ),
   };
 }

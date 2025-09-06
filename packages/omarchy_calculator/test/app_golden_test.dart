@@ -1,11 +1,12 @@
 import 'dart:io';
+import 'package:calc_engine/calc_engine.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_omarchy/flutter_omarchy.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:omarchy_calculator/src/app.dart';
 import 'package:flutter/foundation.dart';
-import 'package:omarchy_calculator/src/engine/command.dart';
-import 'package:omarchy_calculator/src/notifier.dart';
+import 'package:omarchy_calculator/src/features/calculator/state/event.dart';
+import 'package:omarchy_calculator/src/features/calculator/state/notifier.dart';
 
 import 'cover.dart';
 
@@ -14,7 +15,6 @@ Future<void> testApp({
   required String description,
   required Size size,
   required String input,
-  List<CalculatorState> history = const [],
 }) async {
   testWidgets(description, (tester) async {
     const columns = 4;
@@ -33,11 +33,7 @@ Future<void> testApp({
               SizedBox.fromSize(
                 size: size,
                 child: CalculatorApp(
-                  notifier: CalculatorGoldenNotifier(
-                    id: id,
-                    input: input,
-                    history: history,
-                  ),
+                  calculator: CalculatorGoldenNotifier(id: id, input: input),
                   theme: OmarchyThemeData(
                     colors: colors.value,
                     text: const OmarchyTextStyleData.fallback(),
@@ -138,29 +134,26 @@ void main() {
 
 class CalculatorGoldenNotifier extends ChangeNotifier
     implements CalculatorNotifier {
-  CalculatorGoldenNotifier({
-    required this.id,
-    required this.input,
-    this.history = const [],
-  });
+  CalculatorGoldenNotifier({required this.id, required this.input});
 
   final int id;
   final String input;
 
   @override
-  CalculatorState get state => CalculatorState.eval(id, Command.parse(input));
+  final CalcContext context = CalcContext();
 
   @override
-  final List<CalculatorState> history;
-
-  @override
-  void clearHistory() {}
+  CalculatorState get state =>
+      CalculatorState.eval(context, id, Command.parse(input));
 
   @override
   void execute(Command action) {}
 
   @override
   void restore(CalculatorState state) {}
+
+  @override
+  Stream<CalculatorEvent> get events => Stream<CalculatorEvent>.empty();
 }
 
 class TrivialGoldenFileComparator implements GoldenFileComparator {

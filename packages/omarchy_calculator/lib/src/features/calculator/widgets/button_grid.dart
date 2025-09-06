@@ -1,0 +1,168 @@
+import 'dart:math' as math;
+
+import 'package:calc_engine/calc_engine.dart';
+import 'package:flutter_omarchy/flutter_omarchy.dart';
+import 'package:omarchy_calculator/src/features/config/state/config.dart';
+
+class ButtonGrid extends StatefulWidget {
+  const ButtonGrid({
+    super.key,
+
+    required this.layouts,
+    required this.selectedLayout,
+    required this.onPressed,
+    this.spacing = 4.0,
+    this.onOpenHistory,
+  });
+
+  final VoidCallback? onOpenHistory;
+  final List<ButtonLayout> layouts;
+  final int selectedLayout;
+  final ValueChanged<Command> onPressed;
+  final double spacing;
+
+  @override
+  State<ButtonGrid> createState() => _ButtonGridState();
+}
+
+class _ButtonGridState extends State<ButtonGrid> {
+  late var selectedLayout = widget.selectedLayout;
+
+  Iterable<List<Widget>> get rows sync* {
+    final layout = widget.layouts[selectedLayout];
+    final buttons = layout.buttons;
+    var rowWidth = 0;
+    var row = <Widget>[];
+    for (var i = 0; i < buttons.length; i += 1) {
+      final button = layout.buttons[i];
+      final size = math.min(button.size, 4 - rowWidth);
+      if (rowWidth + size > 4) {
+        // yield current row
+        yield row;
+        // start new row
+        row = [];
+        rowWidth = 0;
+      }
+      row.add(
+        Expanded(
+          flex: size,
+          child: CalculatorButton(
+            button,
+            key: ValueKey(button.command),
+            onPressed: () => widget.onPressed(button.command),
+          ),
+        ),
+      );
+      rowWidth += size;
+      if (rowWidth >= 4) {
+        yield row;
+        row = [];
+        rowWidth = 0;
+      }
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return LayoutBuilder(
+      builder: (context, layout) {
+        return Column(
+          spacing: widget.spacing,
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            _LayoutPicker(
+              onOpenHistory: widget.onOpenHistory,
+              layouts: widget.layouts,
+              selectedLayout: selectedLayout,
+              onChanged: (i) {
+                setState(() {
+                  selectedLayout = i;
+                });
+              },
+            ),
+            for (final row in rows)
+              Expanded(
+                child: Row(spacing: widget.spacing, children: [...row]),
+              ),
+          ],
+        );
+      },
+    );
+  }
+}
+
+class CalculatorButton extends StatelessWidget {
+  const CalculatorButton(this.button, {super.key, required this.onPressed});
+
+  final Button button;
+  final VoidCallback onPressed;
+
+  Widget symbol(bool isSmall) => switch (button.icon) {
+    IconData data => Icon(data, size: isSmall ? 30 : 48),
+    null => Text(button.label, style: TextStyle(fontSize: isSmall ? 20 : 32)),
+  };
+  @override
+  Widget build(BuildContext context) {
+    return FadeIn(
+      child: LayoutBuilder(
+        builder: (context, layout) {
+          final isSmall = layout.maxHeight < 75 || layout.maxWidth < 80;
+          return OmarchyButton(
+            style: OmarchyButtonStyle.filled(
+              button.color,
+              padding: EdgeInsets.zero,
+            ),
+            onPressed: onPressed,
+            child: Center(child: symbol(isSmall)),
+          );
+        },
+      ),
+    );
+  }
+}
+
+class _LayoutPicker extends StatelessWidget {
+  const _LayoutPicker({
+    required this.layouts,
+    required this.onChanged,
+    required this.selectedLayout,
+    required this.onOpenHistory,
+  });
+
+  final VoidCallback? onOpenHistory;
+  final ValueChanged<int> onChanged;
+  final List<ButtonLayout> layouts;
+  final int selectedLayout;
+
+  @override
+  Widget build(BuildContext context) {
+    return SingleChildScrollView(
+      scrollDirection: Axis.horizontal,
+      child: Row(
+        spacing: 4,
+        children: [
+          if (onOpenHistory != null)
+            OmarchyButton(
+              style: OmarchyButtonStyle.filled(AnsiColor.black),
+              onPressed: onOpenHistory,
+              child: Icon(OmarchyIcons.codMenu),
+            ),
+          for (var i = 0; i < layouts.length; i += 1)
+            OmarchyButton(
+              style: OmarchyButtonStyle.bar(
+                i == selectedLayout && layouts.length > 1
+                    ? AnsiColor.white
+                    : AnsiColor.black,
+              ),
+              onPressed: () {
+                if (i != selectedLayout) {
+                  onChanged(i);
+                }
+              },
+              child: Text(layouts[i].name),
+            ),
+        ],
+      ),
+    );
+  }
+}

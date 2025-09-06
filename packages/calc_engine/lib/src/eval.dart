@@ -35,10 +35,11 @@ Expression evalPreviousExpressions(CalcContext context, Expression expression) {
         operator,
         evalPreviousExpressions(context, operand),
       );
-    case FunctionExpression(:final function, :final argument):
+    case FunctionExpression(:final function, :final argument, :final isClosed):
       return FunctionExpression(
         function,
         evalPreviousExpressions(context, argument),
+        isClosed: isClosed,
       );
     case ParenthesisGroupExpression(:final expression, :final isClosed):
       return ParenthesisGroupExpression(
@@ -116,7 +117,9 @@ EvalResult _evaluateExpression(CalcContext context, Expression expression) {
             return EvalResult.failure(expression, const DivisionByZeroError());
           }
           // Convert the rational result back to a decimal
-          final result = (leftValue / rightValue).toDecimal();
+          final result = (leftValue / rightValue).toDecimal(
+            scaleOnInfinitePrecision: 20,
+          );
           return EvalResult.success(expression, result);
 
         case BinaryOperator.power:

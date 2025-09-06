@@ -26,6 +26,7 @@ jobs:
 
       - name: Install build dependencies
         run: |
+          cd packages/omarchy_calculator
           sudo apt-get update
           sudo apt-get install -y \
             clang cmake ninja-build pkg-config libgtk-3-dev liblzma-dev curl git
@@ -38,22 +39,27 @@ jobs:
 
       - name: Flutter init
         run: |
+          cd packages/omarchy_calculator
           flutter --version
           flutter doctor -v
           flutter config --enable-linux-desktop
           flutter pub get
 
       - name: Flutter tests
-        run: flutter test --dart-define="ignore-goldens=true"
+        run: |
+          cd packages/omarchy_calculator
+          flutter test --dart-define="ignore-goldens=true"
 
       - name: Build Linux (release)
-        run: flutter build linux --release
+        run: |
+          cd packages/omarchy_calculator
+          flutter build linux --release
 
       - name: Create archive
         run: |
-          cd build/linux/${{ matrix.arch }}/release/bundle/
+          cd packages/omarchy_calculator/build/linux/${{ matrix.arch }}/release/bundle/
           tar -czf omarchy_calculator-${{ github.ref_name }}-${{ matrix.arch }}.tar.gz omarchy_calculator
-          mv omarchy_calculator-${{ github.ref_name }}-${{ matrix.arch }}.tar.gz ../../../
+          mv omarchy_calculator-${{ github.ref_name }}-${{ matrix.arch }}.tar.gz ../../../../../
 
       - name: Upload artifact
         uses: actions/upload-artifact@v4
@@ -91,13 +97,13 @@ jobs:
 
         echo "" >> CHANGELOG.md
         echo "## Downloads:" >> CHANGELOG.md
-        echo "- [flutter_calculator-${{ github.ref_name }}-x64.tar.gz](https://github.com/${{ github.repository }}/releases/download/${{ github.ref_name }}/flutter_omarchy-${{ github.ref_name }}-x64.tar.gz) - AMD64/x64" >> CHANGELOG.md
+        echo "- [flutter_calculator-${{ github.ref_name }}-x64.tar.gz](https://github.com/${{ github.repository }}/releases/download/${{ github.ref_name }}/omarchy_calculator-${{ github.ref_name }}-x64.tar.gz) - AMD64/x64" >> CHANGELOG.md
 
     - name: Create release
       uses: softprops/action-gh-release@v1
       with:
         files: |
-          walker-x64/walker-${{ github.ref_name }}-x64.tar.gz
+          omarchy_calculator-x64/omarchy_calculator-${{ github.ref_name }}-x64.tar.gz
         body_path: CHANGELOG.md
         draft: false
         prerelease: ${{ contains(github.ref_name, 'beta') || contains(github.ref_name, 'alpha') || contains(github.ref_name, 'rc') }}
