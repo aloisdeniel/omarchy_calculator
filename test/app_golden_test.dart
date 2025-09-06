@@ -112,6 +112,10 @@ Future<void> loadFonts() async {
 }
 
 void main() {
+  if (TrivialGoldenFileComparator.ignoreGoldens) {
+    goldenFileComparator = const TrivialGoldenFileComparator();
+  }
+
   setUpAll(() async {
     await loadFonts();
   });
@@ -157,4 +161,25 @@ class CalculatorGoldenNotifier extends ChangeNotifier
 
   @override
   void restore(CalculatorState state) {}
+}
+
+class TrivialGoldenFileComparator implements GoldenFileComparator {
+  const TrivialGoldenFileComparator();
+
+  static const ignoreGoldens = bool.fromEnvironment('ignore-goldens');
+
+  @override
+  Future<bool> compare(Uint8List imageBytes, Uri golden) {
+    return Future<bool>.value(true);
+  }
+
+  @override
+  Future<void> update(Uri golden, Uint8List imageBytes) {
+    throw StateError('Golden files should not be updated while ignored.');
+  }
+
+  @override
+  Uri getTestUri(Uri key, int? version) {
+    return key;
+  }
 }

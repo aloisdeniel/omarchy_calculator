@@ -42,10 +42,6 @@ class _OmarchyPreviewState extends State<OmarchyPreview> {
   Widget build(BuildContext context) {
     final colors = OmarchyColorThemes.all[theme]!;
     const text = OmarchyTextStyleData.fallback();
-    final wallpaper = switch (theme) {
-      _ =>
-        'https://github.com/basecamp/omarchy/blob/master/themes/tokyo-night/backgrounds/1-scenery-pink-lakeside-sunset-lake-landscape-scenic-panorama-7680x3215-144.png?raw=true',
-    };
     final insets = MediaQuery.viewInsetsOf(context);
     return OmarchyThemeProvider(
       data: OmarchyThemeData(colors: colors, text: text),
@@ -71,7 +67,9 @@ class _OmarchyPreviewState extends State<OmarchyPreview> {
                   Positioned.fill(
                     child: FadeInImage(
                       placeholder: MemoryImage(kTransparentImage),
-                      image: NetworkImage(wallpaper),
+                      image: NetworkImage(
+                        '/omarchy_calculator/wallpapers/$theme.jpg',
+                      ),
                       fit: BoxFit.cover,
                     ),
                   ),

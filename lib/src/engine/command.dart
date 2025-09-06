@@ -1,4 +1,4 @@
-import 'package:omarchy_calculator/src/engine/tokenize.dart';
+import 'package:omarchy_calculator/src/engine/base.dart';
 
 /// Base class for calculator actions.
 sealed class Command {

@@ -1,7 +1,7 @@
 import 'package:flutter_omarchy/flutter_omarchy.dart';
+import 'package:omarchy_calculator/src/engine/base.dart';
 import 'package:omarchy_calculator/src/engine/eval.dart';
 import 'package:omarchy_calculator/src/engine/parse.dart';
-import 'package:omarchy_calculator/src/engine/tokenize.dart';
 import 'package:omarchy_calculator/src/notifier.dart';
 
 class ExpressionView extends StatelessWidget {
@@ -26,16 +26,22 @@ class ExpressionView extends StatelessWidget {
         children: [
           formatExpression(theme, state.expression),
           if (withResult)
-            TextSpan(
-              text: switch (state.result) {
-                SuccessEval(:final result) => ' = $result',
-                FailureEval() => '[ERR]',
-              },
-              style: theme.text.bold.copyWith(
-                fontSize: fontSize,
-                color: theme.colors.bright.green,
+            switch (state.result) {
+              SuccessEval(:final result) => TextSpan(
+                text: ' = $result',
+                style: theme.text.bold.copyWith(
+                  fontSize: fontSize,
+                  color: theme.colors.bright.green,
+                ),
               ),
-            ),
+              FailureEval() => TextSpan(
+                text: ' [ERR]',
+                style: theme.text.bold.copyWith(
+                  fontSize: fontSize,
+                  color: theme.colors.bright.red,
+                ),
+              ),
+            },
         ],
       ),
       style: theme.text.italic.copyWith(
@@ -68,14 +74,8 @@ TextSpan formatExpression(OmarchyThemeData theme, Expression expr) {
       children: [
         formatExpression(theme, left),
         TextSpan(
-          text:
-              ' ${switch (operator) {
-                BinaryOperator.add => '+',
-                BinaryOperator.subtract => '-',
-                BinaryOperator.multiply => '×',
-                BinaryOperator.divide => '÷',
-                BinaryOperator.power => '^',
-              }} ',
+          text: ' ${operator.symbol} ',
+
           style: theme.text.bold.copyWith(color: theme.colors.bright.yellow),
         ),
         formatExpression(theme, right),
@@ -84,9 +84,7 @@ TextSpan formatExpression(OmarchyThemeData theme, Expression expr) {
     UnaryExpression(:final operator, :final operand) => TextSpan(
       children: [
         TextSpan(
-          text: switch (operator) {
-            UnaryOperator.negate => '-',
-          },
+          text: operator.symbol,
           style: theme.text.bold.copyWith(color: theme.colors.bright.yellow),
         ),
         formatExpression(theme, operand),
@@ -97,30 +95,28 @@ TextSpan formatExpression(OmarchyThemeData theme, Expression expr) {
       style: theme.text.normal.copyWith(color: theme.colors.foreground),
     ),
     ConstantExpression(:final name) => TextSpan(
-      text: switch (name) {
-        Constant.pi => 'π',
-        Constant.euler => 'e',
-      },
+      text: name.toString(),
       style: theme.text.normal.copyWith(color: theme.colors.bright.cyan),
     ),
-    FunctionExpression(:final function, :final argument) => TextSpan(
-      children: [
-        TextSpan(
-          text: switch (function) {
-            MathFunction.square => 'sqr',
-            MathFunction.sin => 'sin',
-            MathFunction.cos => 'cos',
-            MathFunction.tan => 'tan',
-            MathFunction.squareRoot => 'sqrt',
-            MathFunction.percent => '%',
-          },
-          style: theme.text.bold.copyWith(color: theme.colors.bright.blue),
-        ),
-        const TextSpan(text: '('),
-        formatExpression(theme, argument),
-        const TextSpan(text: ')'),
-      ],
-    ),
+    FunctionExpression(:final function, :final argument) => switch (function) {
+      MathFunction.square => TextSpan(
+        children: [
+          formatExpression(theme, argument),
+          TextSpan(text: '²'),
+        ],
+      ),
+      _ => TextSpan(
+        children: [
+          TextSpan(
+            text: function.toString(),
+            style: theme.text.bold.copyWith(color: theme.colors.bright.blue),
+          ),
+          const TextSpan(text: '('),
+          formatExpression(theme, argument),
+          const TextSpan(text: ')'),
+        ],
+      ),
+    },
     EmptyExpression() => const TextSpan(text: ''),
     PreviousResultExpression(:final expression, :final result) => TextSpan(
       text: result != null

@@ -118,7 +118,6 @@ class _HeaderTile extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final theme = OmarchyTheme.of(context);
     return Padding(
       padding: EdgeInsets.all(14),
       child: Text(

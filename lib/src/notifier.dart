@@ -32,17 +32,18 @@ class CalculatorState {
       );
 
   static CalculatorState eval(int id, List<Command> commands) {
-    final isResult = commands.isNotEmpty && commands.last is Equals;
-    final tokens = tokenize(commands);
-    final rawExpression = parse(tokens);
+    final effectiveTokens = tokenize(commands);
+    final isResult =
+        effectiveTokens.isNotEmpty && effectiveTokens.last is EqualsToken;
+    final rawExpression = parse(effectiveTokens);
     final expression = evalPreviousExpressions(rawExpression);
     final result = e.eval(expression);
-    final input = ei.input(tokens);
+    final input = ei.input(effectiveTokens);
     return CalculatorState(
       id: id,
       commands: commands,
       input: input,
-      tokens: tokens,
+      tokens: effectiveTokens,
       isResult: isResult,
       expression: expression,
       result: result,
@@ -78,6 +79,8 @@ class CalculatorNotifier extends ChangeNotifier {
     CalculatorState.empty(),
   ];
 
+  Decimal _memory = Decimal.zero;
+
   final List<CalculatorState> _history = <CalculatorState>[];
 
   CalculatorState get state => _current.last;
@@ -85,6 +88,33 @@ class CalculatorNotifier extends ChangeNotifier {
   List<CalculatorState> get history => _history;
 
   void execute(Command action) {
+    if (action is Memory) {
+      switch (action) {
+        case MemoryAdd():
+          _memory += switch (state.result) {
+            SuccessEval(:final result) => result,
+            FailureEval() => Decimal.zero,
+          };
+        case MemorySubtract():
+          _memory -= switch (state.result) {
+            SuccessEval(:final result) => result,
+            FailureEval() => Decimal.zero,
+          };
+        case MemoryRecall():
+          var commands = [...state.commands];
+          if (state.tokens.isNotEmpty && state.tokens.last is NumberToken) {
+            commands.add(Command.operator(OperatorType.multiply));
+          }
+          commands.addAll(Command.parse(_memory.toString()));
+          final newState = CalculatorState.eval(state.id + 1, commands);
+          _current.add(newState);
+          notifyListeners();
+          return;
+        case MemoryClear():
+          _memory = Decimal.zero;
+          return;
+      }
+    }
     if (action is ClearAll) {
       final newId = state.id + 1;
       _current.clear();

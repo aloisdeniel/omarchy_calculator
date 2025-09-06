@@ -1,8 +1,8 @@
 import 'package:decimal/decimal.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:omarchy_calculator/src/engine/base.dart';
 import 'package:omarchy_calculator/src/engine/eval.dart';
 import 'package:omarchy_calculator/src/engine/parse.dart' hide OtherError;
-import 'package:omarchy_calculator/src/engine/tokenize.dart';
 
 void testEval({
   required Expression expr,

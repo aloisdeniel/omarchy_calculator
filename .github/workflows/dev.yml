@@ -1,8 +1,7 @@
-name: Release 
+name: Development
 
 on:
   push:
-    tags: [ 'v*' ]
 
 jobs:
   build:
@@ -60,46 +59,3 @@ jobs:
         with:
           name: omarchy_calculator-${{ matrix.arch }}
           path: omarchy_calculator-${{ github.ref_name }}-${{ matrix.arch }}.tar.gz
-
-  release:
-    needs: [build]
-    runs-on: ubuntu-latest
-    steps:
-    - uses: actions/checkout@v4
-      with:
-        fetch-depth: 0
-
-    - name: Download all artifacts
-      uses: actions/download-artifact@v4
-
-    - name: Generate changelog
-      run: |
-        # Get previous tag
-        PREV_TAG=$(git describe --tags --abbrev=0 HEAD^ 2>/dev/null || echo "")
-
-        # Generate changelog
-        echo "# Changes in ${{ github.ref_name }}" > CHANGELOG.md
-        echo "" >> CHANGELOG.md
-
-        if [ -n "$PREV_TAG" ]; then
-          echo "## Commits since $PREV_TAG:" >> CHANGELOG.md
-          git log --pretty=format:"- %s (%h)" $PREV_TAG..HEAD >> CHANGELOG.md
-        else
-          echo "## All commits:" >> CHANGELOG.md
-          git log --pretty=format:"- %s (%h)" >> CHANGELOG.md
-        fi
-
-        echo "" >> CHANGELOG.md
-        echo "## Downloads:" >> CHANGELOG.md
-        echo "- [flutter_calculator-${{ github.ref_name }}-x64.tar.gz](https://github.com/${{ github.repository }}/releases/download/${{ github.ref_name }}/flutter_omarchy-${{ github.ref_name }}-x64.tar.gz) - AMD64/x64" >> CHANGELOG.md
-
-    - name: Create release
-      uses: softprops/action-gh-release@v1
-      with:
-        files: |
-          walker-x64/walker-${{ github.ref_name }}-x64.tar.gz
-        body_path: CHANGELOG.md
-        draft: false
-        prerelease: ${{ contains(github.ref_name, 'beta') || contains(github.ref_name, 'alpha') || contains(github.ref_name, 'rc') }}
-      env:
-        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

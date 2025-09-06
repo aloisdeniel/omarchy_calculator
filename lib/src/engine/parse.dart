@@ -1,4 +1,5 @@
 import 'package:decimal/decimal.dart';
+import 'package:omarchy_calculator/src/engine/base.dart';
 import 'package:omarchy_calculator/src/engine/tokenize.dart';
 
 Expression parse(List<Token> tokens) {
@@ -6,7 +7,7 @@ Expression parse(List<Token> tokens) {
 
   // Split by equals sign
   final calculations = tokens.fold(<List<Token>>[], (result, token) {
-    if (token is OperatorToken && token.operator == OperatorTokenType.equals) {
+    if (token is EqualsToken) {
       result.add([]);
     } else {
       if (result.isEmpty) {
@@ -19,239 +20,268 @@ Expression parse(List<Token> tokens) {
 
   Expression? lastExpression;
   for (final calculation in calculations.where((x) => x.isNotEmpty)) {
-    final step = _parseExpression(
+    final parser = _Parser(calculation);
+    final step = parser.readExpression(
       lastExpression != null ? PreviousResultExpression(lastExpression) : null,
-      calculation,
-      0,
     );
 
-    lastExpression = step.expression is EmptyExpression
-        ? null
-        : step.expression;
+    lastExpression = step is EmptyExpression ? null : step;
   }
 
   return lastExpression ?? const EmptyExpression();
 }
 
-_ParsingStep _parseExpression(
-  Expression? lastExpression,
-  List<Token> tokens,
-  int index,
-) {
-  /// If the expression starts with an operator, we
-  /// insert the last expression as the left operand.
-  if (index == 0 && lastExpression != null && tokens.isNotEmpty) {
-    final token = tokens.first;
-    if (token case OperatorToken()) {
-      final right = _parseAddSubExpression(null, tokens, 1);
-      return _ParsingStep(
-        BinaryExpression(
-          token.operator.toBinaryOperator(),
+class _Parser {
+  _Parser(this.tokens);
+  final List<Token> tokens;
+  int _index = 0;
+
+  Token? peekToken([int offset = 0]) {
+    final index = _index + offset;
+    if (index >= 0 && index < tokens.length) {
+      return tokens[index];
+    }
+    return null;
+  }
+
+  Token? readToken() {
+    final result = peekToken();
+    if (result != null) _index++;
+    return result;
+  }
+
+  Expression? readExpression(Expression? lastExpression) {
+    if (_index == 0 && lastExpression != null && tokens.isNotEmpty) {
+      final token = tokens.first;
+      if (token case OperatorToken()) {
+        _index++;
+        final right = readAddSubExpression(null);
+        return BinaryExpression(
+          BinaryOperator.fromToken(token.operator),
           lastExpression,
-          right.expression,
-        ),
-        right.nextIndex,
-      );
-    }
-  }
-  return _parseAddSubExpression(lastExpression, tokens, index);
-}
-
-_ParsingStep _parseAddSubExpression(
-  Expression? lastExpression,
-  List<Token> tokens,
-  int index,
-) {
-  var result = _parseMulDivExpression(lastExpression, tokens, index);
-
-  while (result.nextIndex < tokens.length) {
-    final token = tokens[result.nextIndex];
-    if (token is OperatorToken &&
-        (token.operator == OperatorTokenType.plus ||
-            token.operator == OperatorTokenType.minus)) {
-      final right = _parseMulDivExpression(
-        lastExpression,
-        tokens,
-        result.nextIndex + 1,
-      );
-      result = _ParsingStep(
-        BinaryExpression(
-          token.operator.toBinaryOperator(),
-          result.expression,
-          right.expression,
-        ),
-        right.nextIndex,
-      );
-    } else {
-      break;
-    }
-  }
-  return result;
-}
-
-_ParsingStep _parseMulDivExpression(
-  Expression? lastExpression,
-  List<Token> tokens,
-  int index,
-) {
-  var result = _parsePowerExpression(lastExpression, tokens, index);
-
-  while (result.nextIndex < tokens.length) {
-    final token = tokens[result.nextIndex];
-    if (token is OperatorToken &&
-        (token.operator == OperatorTokenType.multiply ||
-            token.operator == OperatorTokenType.divide)) {
-      final right = _parsePowerExpression(
-        lastExpression,
-        tokens,
-        result.nextIndex + 1,
-      );
-      result = _ParsingStep(
-        BinaryExpression(
-          token.operator.toBinaryOperator(),
-          result.expression,
-          right.expression,
-        ),
-        right.nextIndex,
-      );
-    } else {
-      break;
-    }
-  }
-  return result;
-}
-
-_ParsingStep _parsePowerExpression(
-  Expression? lastExpression,
-  List<Token> tokens,
-  int index,
-) {
-  var result = _parseUnaryExpression(lastExpression, tokens, index);
-
-  if (result.nextIndex < tokens.length) {
-    final token = tokens[result.nextIndex];
-    if (token is OperatorToken && token.operator == OperatorTokenType.power) {
-      final right = _parsePowerExpression(
-        lastExpression,
-        tokens,
-        result.nextIndex + 1,
-      );
-      result = _ParsingStep(
-        BinaryExpression(
-          BinaryOperator.power,
-          result.expression,
-          right.expression,
-        ),
-        right.nextIndex,
-      );
-    }
-  }
-  return result;
-}
-
-_ParsingStep _parseUnaryExpression(
-  Expression? lastExpression,
-  List<Token> tokens,
-  int index,
-) {
-  if (index >= tokens.length) {
-    return _ParsingStep(const EmptyExpression(), index);
-  }
-
-  final token = tokens[index];
-
-  if (token is OperatorToken && token.operator == OperatorTokenType.minus) {
-    if (index + 1 < tokens.length && tokens[index + 1] is NumberToken) {
-      final numberToken = tokens[index + 1] as NumberToken;
-      return _ParsingStep(
-        NumberExpression(Decimal.parse('-${numberToken.value}')),
-        index + 2,
-      );
-    } else {
-      final operand = _parseUnaryExpression(lastExpression, tokens, index + 1);
-      return _ParsingStep(
-        UnaryExpression(UnaryOperator.negate, operand.expression),
-        operand.nextIndex,
-      );
-    }
-  }
-
-  return _parsePostfixExpression(lastExpression, tokens, index);
-}
-
-_ParsingStep _parsePostfixExpression(
-  Expression? lastExpression,
-  List<Token> tokens,
-  int index,
-) {
-  var result = _parsePrimaryExpression(lastExpression, tokens, index);
-
-  while (result.nextIndex < tokens.length) {
-    final token = tokens[result.nextIndex];
-    if (token is OperatorToken &&
-        (token.operator == OperatorTokenType.percent ||
-            token.operator == OperatorTokenType.squareRoot)) {
-      result = _ParsingStep(
-        FunctionExpression(token.operator.toMathFunction(), result.expression),
-        result.nextIndex + 1,
-      );
-    } else if (token is FunctionToken) {
-      result = _ParsingStep(
-        FunctionExpression(token.name.toMathFunction(), result.expression),
-        result.nextIndex + 1,
-      );
-    } else {
-      break;
-    }
-  }
-
-  return result;
-}
-
-_ParsingStep _parsePrimaryExpression(
-  Expression? lastExpression,
-  List<Token> tokens,
-  int index,
-) {
-  if (index >= tokens.length) {
-    return _ParsingStep(const EmptyExpression(), index);
-  }
-
-  final token = tokens[index];
-  switch (token) {
-    case NumberToken(value: final value):
-      return _ParsingStep(NumberExpression(Decimal.parse(value)), index + 1);
-
-    case ConstantToken(:final name):
-      return _ParsingStep(ConstantExpression(name), index + 1);
-
-    case ParenthesisToken(isOpen: true):
-      final inner = _parseAddSubExpression(lastExpression, tokens, index + 1);
-      if (inner.nextIndex >= tokens.length ||
-          tokens[inner.nextIndex] is! ParenthesisToken ||
-          (tokens[inner.nextIndex] as ParenthesisToken).isOpen) {
-        return _ParsingStep(
-          ParenthesisGroupExpression(inner.expression, false),
-          inner.nextIndex + 1,
+          right ?? const EmptyExpression(),
         );
       }
-      return _ParsingStep(
-        ParenthesisGroupExpression(inner.expression, true),
-        inner.nextIndex + 1,
-      );
-
-    case CommandToken():
-      return _ParsingStep(const EmptyExpression(), index + 1);
-
-    default:
-      return _ParsingStep(const EmptyExpression(), index + 1);
+    }
+    return readAddSubExpression(lastExpression);
   }
-}
 
-class _ParsingStep {
-  _ParsingStep(this.expression, this.nextIndex);
-  final Expression expression;
-  final int nextIndex;
+  Expression? readAddSubExpression(Expression? lastExpression) {
+    var result = readMulDivExpression(lastExpression);
+
+    while (result != null) {
+      final token = peekToken();
+      if (token is OperatorToken &&
+          (token.operator == OperatorTokenType.plus ||
+              token.operator == OperatorTokenType.minus)) {
+        final finalOperator = _resolveConsecutiveOperators(tokens);
+
+        final right = readMulDivExpression(lastExpression);
+        result = BinaryExpression(
+          BinaryOperator.fromToken(finalOperator!),
+          result,
+          right ?? const EmptyExpression(),
+        );
+      } else {
+        break;
+      }
+    }
+    return result;
+  }
+
+  Expression? readMulDivExpression(Expression? lastExpression) {
+    var result = readPowerExpression(lastExpression);
+
+    while (result != null) {
+      final token = peekToken();
+      if (token is OperatorToken &&
+          (token.operator == OperatorTokenType.multiply ||
+              token.operator == OperatorTokenType.divide)) {
+        final finalOperator = _resolveConsecutiveOperators(tokens);
+
+        final right = readPowerExpression(lastExpression);
+        result = BinaryExpression(
+          BinaryOperator.fromToken(finalOperator!),
+          result,
+          right ?? const EmptyExpression(),
+        );
+      } else {
+        break;
+      }
+    }
+    return result;
+  }
+
+  Expression? readPowerExpression(Expression? lastExpression) {
+    var result = readUnaryExpression(lastExpression);
+
+    if (result != null) {
+      final token = peekToken();
+      if (token is OperatorToken && token.operator == OperatorTokenType.power) {
+        _index++;
+        final right = readPowerExpression(lastExpression);
+        result = BinaryExpression(
+          BinaryOperator.power,
+          result,
+          right ?? EmptyExpression(),
+        );
+      }
+    }
+    return result;
+  }
+
+  Expression? readUnaryExpression(Expression? lastExpression) {
+    if (_index >= tokens.length) {
+      return null;
+    }
+
+    var token = peekToken();
+
+    if (token is OperatorToken && token.operator == OperatorTokenType.minus) {
+      _index++;
+
+      // We skip all consecutive minus signs
+      token = peekToken();
+      while (token is OperatorToken &&
+          token.operator == OperatorTokenType.minus) {
+        _index++;
+        token = peekToken();
+      }
+
+      final operand = readPostfixExpression(lastExpression);
+      return UnaryExpression(
+        UnaryOperator.negate,
+        operand ?? const EmptyExpression(),
+      );
+    }
+
+    return readPostfixExpression(lastExpression);
+  }
+
+  Expression? readPostfixExpression(Expression? lastExpression) {
+    var result = readPrimaryExpression(lastExpression);
+
+    while (result != null) {
+      final token = peekToken();
+      if (token is FunctionToken) {
+        _index++;
+        result = FunctionExpression(token.function, result);
+      } else {
+        break;
+      }
+    }
+
+    return result;
+  }
+
+  Expression? readPrimaryExpression(Expression? lastExpression) {
+    if (_index >= tokens.length) {
+      return null;
+    }
+
+    final token = readToken();
+    switch (token) {
+      case NumberToken():
+        return NumberExpression(token.asDecimal());
+
+      case ConstantToken(:final name):
+        return ConstantExpression(name);
+
+      case ParenthesisToken(isOpen: true):
+        final inner = readAddSubExpression(lastExpression);
+
+        if (inner == null) {
+          return ParenthesisGroupExpression(const EmptyExpression(), false);
+        }
+
+        final following = peekToken();
+        if (following == null ||
+            following is! ParenthesisToken ||
+            following.isOpen) {
+          return ParenthesisGroupExpression(inner, false);
+        }
+
+        _index++;
+        return ParenthesisGroupExpression(inner, true);
+
+      default:
+        return null;
+    }
+  }
+
+  /// Resolves consecutive operators according to standard mathematical rules.
+  OperatorTokenType? _resolveConsecutiveOperators(List<Token> tokens) {
+    if (_index >= tokens.length) {
+      throw ArgumentError('Index out of range');
+    }
+
+    var token = peekToken();
+    OperatorTokenType? result;
+    while (token is OperatorToken) {
+      _index++;
+      final nextToken = peekToken();
+      final nextNextToken = peekToken(1);
+
+      // Something like "* - 4" should be treated as "* ( -4 )"
+      // but not "- - 4" which is "-4"
+      final isFollowedByNegate =
+          token.operator != OperatorTokenType.minus &&
+          (nextToken is OperatorToken &&
+              nextToken.operator == OperatorTokenType.minus) &&
+          (nextNextToken is NumberToken ||
+              (nextNextToken is ParenthesisToken && nextNextToken.isOpen));
+
+      if (nextToken is! OperatorToken || isFollowedByNegate) {
+        result = token.operator;
+        break;
+      }
+
+      switch ((token.operator, nextToken.operator)) {
+        // +
+        case (OperatorTokenType.plus, OperatorTokenType.plus):
+          result = OperatorTokenType.plus;
+        case (OperatorTokenType.plus, OperatorTokenType.minus):
+          result = OperatorTokenType.minus;
+        case (OperatorTokenType.plus, final next):
+          result = next;
+
+        // -
+        case (OperatorTokenType.minus, OperatorTokenType.plus):
+          result = OperatorTokenType.minus;
+        case (OperatorTokenType.minus, OperatorTokenType.minus):
+          result = OperatorTokenType.minus;
+        case (OperatorTokenType.minus, final next):
+          result = next;
+        // *
+        case (OperatorTokenType.multiply, OperatorTokenType.plus):
+          result = OperatorTokenType.multiply;
+        case (OperatorTokenType.multiply, OperatorTokenType.minus):
+          result = OperatorTokenType.multiply;
+        case (OperatorTokenType.multiply, final next):
+          result = next;
+
+        // /
+        case (OperatorTokenType.divide, OperatorTokenType.plus):
+          result = OperatorTokenType.divide;
+        case (OperatorTokenType.divide, OperatorTokenType.minus):
+          result = OperatorTokenType.divide;
+        case (OperatorTokenType.divide, final next):
+          result = next;
+
+        // ^
+        case (OperatorTokenType.power, OperatorTokenType.plus):
+          result = OperatorTokenType.power;
+        case (OperatorTokenType.power, OperatorTokenType.minus):
+          result = OperatorTokenType.power;
+        case (OperatorTokenType.power, final next):
+          result = next;
+      }
+
+      token = nextToken;
+    }
+
+    return result;
+  }
 }
 
 sealed class ParsingError {
@@ -356,6 +386,9 @@ class PreviousResultExpression extends Expression {
 
 class UnaryExpression extends Expression {
   const UnaryExpression(this.operator, this.operand);
+
+  const UnaryExpression.negate(this.operand) : operator = UnaryOperator.negate;
+
   final UnaryOperator operator;
   final Expression operand;
 
@@ -379,11 +412,27 @@ class UnaryExpression extends Expression {
 enum BinaryOperator {
   add('+'),
   subtract('-'),
-  multiply('*'),
-  divide('/'),
+  multiply('×'),
+  divide('÷'),
   power('^');
 
   const BinaryOperator(this.symbol);
+
+  factory BinaryOperator.fromToken(OperatorTokenType token) {
+    switch (token) {
+      case OperatorTokenType.plus:
+        return BinaryOperator.add;
+      case OperatorTokenType.minus:
+        return BinaryOperator.subtract;
+      case OperatorTokenType.multiply:
+        return BinaryOperator.multiply;
+      case OperatorTokenType.divide:
+        return BinaryOperator.divide;
+      case OperatorTokenType.power:
+        return BinaryOperator.power;
+    }
+  }
+
   final String symbol;
 }
 
@@ -408,33 +457,6 @@ class BinaryExpression extends Expression {
   @override
   String toString() {
     return '(${operator.symbol} $left $right)';
-  }
-}
-
-enum MathFunction {
-  sin,
-  cos,
-  tan,
-  square,
-  squareRoot,
-  percent;
-
-  @override
-  String toString() {
-    switch (this) {
-      case MathFunction.sin:
-        return 'sin';
-      case MathFunction.cos:
-        return 'cos';
-      case MathFunction.tan:
-        return 'tan';
-      case MathFunction.square:
-        return 'x²';
-      case MathFunction.squareRoot:
-        return '√';
-      case MathFunction.percent:
-        return '%';
-    }
   }
 }
 
@@ -479,57 +501,5 @@ class FunctionExpression extends Expression {
   @override
   String toString() {
     return '($function $argument)';
-  }
-}
-
-extension on FunctionTokenType {
-  MathFunction toMathFunction() {
-    switch (this) {
-      case FunctionTokenType.sin:
-        return MathFunction.sin;
-      case FunctionTokenType.cos:
-        return MathFunction.cos;
-      case FunctionTokenType.tan:
-        return MathFunction.tan;
-      case FunctionTokenType.square:
-        return MathFunction.square;
-    }
-  }
-}
-
-extension on OperatorTokenType {
-  BinaryOperator toBinaryOperator() {
-    switch (this) {
-      case OperatorTokenType.plus:
-        return BinaryOperator.add;
-      case OperatorTokenType.minus:
-        return BinaryOperator.subtract;
-      case OperatorTokenType.multiply:
-        return BinaryOperator.multiply;
-      case OperatorTokenType.divide:
-        return BinaryOperator.divide;
-      case OperatorTokenType.power:
-        return BinaryOperator.power;
-      case OperatorTokenType.squareRoot:
-      case OperatorTokenType.percent:
-      case OperatorTokenType.equals:
-        throw UnimplementedError();
-    }
-  }
-
-  MathFunction toMathFunction() {
-    switch (this) {
-      case OperatorTokenType.squareRoot:
-        return MathFunction.squareRoot;
-      case OperatorTokenType.percent:
-        return MathFunction.percent;
-      case OperatorTokenType.equals:
-      case OperatorTokenType.plus:
-      case OperatorTokenType.minus:
-      case OperatorTokenType.multiply:
-      case OperatorTokenType.divide:
-      case OperatorTokenType.power:
-        throw UnimplementedError();
-    }
   }
 }

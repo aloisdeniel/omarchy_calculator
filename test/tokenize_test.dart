@@ -1,4 +1,5 @@
 import 'package:flutter_test/flutter_test.dart';
+import 'package:omarchy_calculator/src/engine/base.dart';
 import 'package:omarchy_calculator/src/engine/command.dart';
 import 'package:omarchy_calculator/src/engine/tokenize.dart';
 
@@ -120,8 +121,8 @@ void main() {
   testTokenize(
     commands: const [Command.square(), Command.cosine()],
     expected: const [
-      FunctionToken(FunctionTokenType.square),
-      FunctionToken(FunctionTokenType.cos),
+      FunctionToken(MathFunction.square),
+      FunctionToken(MathFunction.cos),
     ],
     description: 'Functions',
   );
@@ -165,7 +166,7 @@ void main() {
       NumberToken('60'),
       OperatorToken(OperatorTokenType.divide),
       NumberToken('2'),
-      OperatorToken(OperatorTokenType.equals),
+      EqualsToken(),
       NumberToken('14'),
     ],
     description: 'Equals followed with a number',
