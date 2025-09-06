@@ -134,6 +134,11 @@ class ParenthesisToken extends Token {
 
   @override
   int get hashCode => isOpen.hashCode;
+
+  @override
+  String toString() {
+    return isOpen ? '(' : ')';
+  }
 }
 
 class NumberToken extends Token {

@@ -456,7 +456,7 @@ class BinaryExpression extends Expression {
 
   @override
   String toString() {
-    return '(${operator.symbol} $left $right)';
+    return '($left ${operator.symbol} $right)';
   }
 }
 
@@ -500,6 +500,6 @@ class FunctionExpression extends Expression {
 
   @override
   String toString() {
-    return '($function $argument)';
+    return '$function($argument)';
   }
 }

@@ -16,11 +16,17 @@ final parseDataSet = [
       ([NumberToken('0.0')], NumberExpression(Decimal.parse('0.0'))),
       ([NumberToken('0.1')], NumberExpression(Decimal.parse('0.1'))),
       ([NumberToken('0.001')], NumberExpression(Decimal.parse('0.001'))),
-      ([NumberToken('0.123456789')], NumberExpression(Decimal.parse('0.123456789'))),
+      (
+        [NumberToken('0.123456789')],
+        NumberExpression(Decimal.parse('0.123456789')),
+      ),
       ([NumberToken('1.0')], NumberExpression(Decimal.parse('1.0'))),
       ([NumberToken('10.0')], NumberExpression(Decimal.parse('10.0'))),
       ([NumberToken('100.5')], NumberExpression(Decimal.parse('100.5'))),
-      ([NumberToken('999999.999999')], NumberExpression(Decimal.parse('999999.999999'))),
+      (
+        [NumberToken('999999.999999')],
+        NumberExpression(Decimal.parse('999999.999999')),
+      ),
       ([NumberToken('0.000001')], NumberExpression(Decimal.parse('0.000001'))),
       ([NumberToken('1000000')], NumberExpression(Decimal.fromInt(1000000))),
       ([NumberToken('42')], NumberExpression(Decimal.fromInt(42))),
@@ -756,7 +762,7 @@ final parseDataSet = [
       (
         <Token>[
           ConstantToken(Constant.pi),
-        OperatorToken(OperatorTokenType.multiply),
+          OperatorToken(OperatorTokenType.multiply),
           ConstantToken(Constant.euler),
         ],
         BinaryExpression(
