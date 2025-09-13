@@ -7,6 +7,7 @@ import 'package:omarchy_calculator/src/app.dart';
 import 'package:flutter/foundation.dart';
 import 'package:omarchy_calculator/src/features/calculator/state/event.dart';
 import 'package:omarchy_calculator/src/features/calculator/state/notifier.dart';
+import 'package:omarchy_calculator/src/features/history/state/state.dart';
 
 import 'cover.dart';
 
@@ -150,7 +151,7 @@ class CalculatorGoldenNotifier extends ChangeNotifier
   void execute(Command action) {}
 
   @override
-  void restore(CalculatorState state) {}
+  void restore(HistoryItemState state) {}
 
   @override
   Stream<CalculatorEvent> get events => Stream<CalculatorEvent>.empty();

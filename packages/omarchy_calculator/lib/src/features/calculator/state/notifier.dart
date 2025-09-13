@@ -3,6 +3,7 @@ import 'dart:async';
 import 'package:calc_engine/calc_engine.dart';
 import 'package:flutter/widgets.dart';
 import 'package:omarchy_calculator/src/features/calculator/state/event.dart';
+import 'package:omarchy_calculator/src/features/history/state/state.dart';
 
 import 'state.dart';
 
@@ -74,10 +75,12 @@ class CalculatorNotifier extends ChangeNotifier {
     notifyListeners();
   }
 
-  void restore(CalculatorState state) {
+  void restore(HistoryItemState state) {
     final newId = this.state.id + 1;
     _current.clear();
-    _current.add(state.copyWith(id: newId, input: ''));
+    _current.add(
+      CalculatorState.empty(context, id: newId, result: state.item.result),
+    );
     notifyListeners();
   }
 

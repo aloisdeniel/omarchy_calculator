@@ -35,7 +35,9 @@ class Display extends StatelessWidget {
                         padding: const EdgeInsets.symmetric(horizontal: 14.0),
                         child: ExpressionView(
                           key: Key('details'),
-                          state,
+                          state.context,
+                          state.expression,
+                          state.result,
                           fontSize: isCondensed ? 16 : 24,
                         ),
                       ),

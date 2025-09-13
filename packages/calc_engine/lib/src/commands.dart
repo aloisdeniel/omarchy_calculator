@@ -90,6 +90,27 @@ sealed class Command {
     return commands;
   }
 
+  String serialize() {
+    return switch (this) {
+      Digit(:final value) => value.toString(),
+      DecimalPoint() => '.',
+      Operator(:final type) => type.toSymbol(),
+      ConstantCommand(:final constant) => constant,
+      FunctionCommand(:final function) => '#$function',
+      Equals() => '=',
+      ClearAll() => 'CA',
+      ClearEntry() => 'CE',
+      Backspace() => 'BS',
+      MemoryAdd() => 'M+',
+      MemorySubtract() => 'M-',
+      MemoryRecall() => 'MR',
+      MemoryClear() => 'MC',
+      Power() => '^',
+      OpenParenthesis() => '(',
+      CloseParenthesis() => ')',
+    };
+  }
+
   const factory Command.digit(int value) = Digit;
 
   const factory Command.decimalPoint() = DecimalPoint;

@@ -1,14 +1,14 @@
+import 'package:calc_engine/calc_engine.dart';
 import 'package:flutter_omarchy/flutter_omarchy.dart';
-import 'package:flutter_omarchy/src/widgets/utils/default_foreground.dart';
 import 'package:intl/intl.dart';
 import 'package:omarchy_calculator/src/app.dart';
-import 'package:omarchy_calculator/src/features/calculator/state/notifier.dart';
+import 'package:omarchy_calculator/src/features/history/state/state.dart';
 import 'package:omarchy_calculator/src/widgets/expression.dart';
 
 class HistoryScreen extends StatelessWidget {
   const HistoryScreen({super.key, required this.onSelect});
 
-  final ValueChanged<CalculatorState> onSelect;
+  final ValueChanged<HistoryItemState> onSelect;
 
   @override
   Widget build(BuildContext context) {
@@ -75,18 +75,18 @@ class HistoryScreen extends StatelessWidget {
 class _Items extends StatelessWidget {
   const _Items({required this.history, required this.onSelect});
 
-  final ValueChanged<CalculatorState> onSelect;
-  final List<CalculatorState> history;
+  final ValueChanged<HistoryItemState> onSelect;
+  final List<HistoryItemState> history;
 
   @override
   Widget build(BuildContext context) {
-    final groupedByDay = <(DateTime, List<CalculatorState>)>[];
+    final groupedByDay = <(DateTime, List<HistoryItemState>)>[];
 
     for (final item in history) {
       final day = DateTime(
-        item.dateTime.year,
-        item.dateTime.month,
-        item.dateTime.day,
+        item.item.timestamp.year,
+        item.item.timestamp.month,
+        item.item.timestamp.day,
       );
 
       final index = groupedByDay.indexWhere((e) => e.$1 == day);
@@ -104,7 +104,7 @@ class _Items extends StatelessWidget {
           _HeaderTile(date),
           for (final item in items)
             FadeIn(
-              key: ValueKey(item.id),
+              key: ValueKey(item.item.id),
               child: _HistoryTile(item, onTap: () => onSelect(item)),
             ),
         ],
@@ -136,30 +136,34 @@ class _HeaderTile extends StatelessWidget {
 class _HistoryTile extends StatelessWidget {
   const _HistoryTile(this.item, {required this.onTap});
 
-  final CalculatorState item;
+  final HistoryItemState item;
   final VoidCallback onTap;
 
   @override
   Widget build(BuildContext context) {
     final theme = OmarchyTheme.of(context);
+    final notifier = NotifiersScope.of(context).history;
     var child = Column(
       mainAxisAlignment: MainAxisAlignment.center,
       crossAxisAlignment: CrossAxisAlignment.stretch,
       spacing: 2,
       children: [
         Text(
-          DateFormat.Hm().format(item.dateTime),
+          DateFormat.Hm().format(item.item.timestamp),
           style: theme.text.normal.copyWith(
             color: theme.colors.bright.black,
             fontSize: 11,
           ),
         ),
-        ExpressionView(
-          item,
-          withResult: true,
-          fontSize: 12,
-          textAlign: TextAlign.start,
-        ),
+        if (item.expression case final expr?)
+          ExpressionView(
+            notifier.context,
+            expr,
+            EvalResult.success(expr, item.item.result),
+            withResult: true,
+            fontSize: 12,
+            textAlign: TextAlign.start,
+          ),
       ],
     );
     final isSelected = Selected.of(context);

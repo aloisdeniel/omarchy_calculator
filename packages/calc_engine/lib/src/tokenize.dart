@@ -101,6 +101,8 @@ List<Token> tokenize(List<Command> commands) {
 
 sealed class Token {
   const Token();
+
+  List<Command> toCommands();
 }
 
 class ParenthesisToken extends Token {
@@ -120,6 +122,11 @@ class ParenthesisToken extends Token {
   @override
   String toString() {
     return isOpen ? '(' : ')';
+  }
+
+  @override
+  List<Command> toCommands() {
+    return [if (isOpen) const OpenParenthesis() else const CloseParenthesis()];
   }
 }
 
@@ -147,6 +154,17 @@ class NumberToken extends Token {
   String toString() {
     return value;
   }
+
+  @override
+  List<Command> toCommands() {
+    return value.split('').map((char) {
+      if (char == '.') {
+        return const DecimalPoint();
+      } else {
+        return Digit(int.parse(char));
+      }
+    }).toList();
+  }
 }
 
 class OperatorToken extends Token {
@@ -172,6 +190,19 @@ class OperatorToken extends Token {
   @override
   String toString() {
     return '<$operator>';
+  }
+
+  @override
+  List<Command> toCommands() {
+    return [
+      switch (operator) {
+        OperatorTokenType.plus => const Operator(OperatorType.plus),
+        OperatorTokenType.minus => const Operator(OperatorType.minus),
+        OperatorTokenType.multiply => const Operator(OperatorType.multiply),
+        OperatorTokenType.divide => const Operator(OperatorType.divide),
+        OperatorTokenType.power => const Operator(OperatorType.power),
+      },
+    ];
   }
 }
 
@@ -212,6 +243,11 @@ class FunctionToken extends Token {
   String toString() {
     return '{$function}';
   }
+
+  @override
+  List<Command> toCommands() {
+    return [FunctionCommand(function)];
+  }
 }
 
 class ConstantToken extends Token {
@@ -231,6 +267,11 @@ class ConstantToken extends Token {
   String toString() {
     return '[$constant]';
   }
+
+  @override
+  List<Command> toCommands() {
+    return [ConstantCommand(constant)];
+  }
 }
 
 class EqualsToken extends Token {
@@ -249,12 +290,17 @@ class EqualsToken extends Token {
   String toString() {
     return '=';
   }
+
+  @override
+  List<Command> toCommands() {
+    return [const Equals()];
+  }
 }
 
 /// For representing commands that do not fit into other categories.
 class CommandToken extends Token {
   const CommandToken(this.command);
-  final CommandToken command;
+  final Command command;
 
   @override
   bool operator ==(Object other) {
@@ -268,5 +314,10 @@ class CommandToken extends Token {
   @override
   String toString() {
     return 'cmd.$command.';
+  }
+
+  @override
+  List<Command> toCommands() {
+    return [command];
   }
 }

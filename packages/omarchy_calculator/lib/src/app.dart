@@ -30,7 +30,8 @@ class CalculatorApp extends StatefulWidget {
 
 class _CalculatorAppState extends State<CalculatorApp> {
   late final calculator = widget.calculator ?? CalculatorNotifier();
-  late final history = widget.history ?? HistoryNotifier();
+  late final history =
+      widget.history ?? HistoryNotifier(context: calculator.context);
   late final config = widget.config ?? ConfigNotifier();
 
   @override

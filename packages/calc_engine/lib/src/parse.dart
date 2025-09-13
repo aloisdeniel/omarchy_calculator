@@ -341,6 +341,8 @@ class OtherError extends ParsingError {
 
 sealed class Expression {
   const Expression();
+
+  List<Token> toTokens();
 }
 
 class EmptyExpression extends Expression {
@@ -358,6 +360,11 @@ class EmptyExpression extends Expression {
   @override
   String toString() {
     return '()';
+  }
+
+  @override
+  List<Token> toTokens() {
+    return const <Token>[];
   }
 }
 
@@ -379,6 +386,11 @@ class UnknownConstantExpression extends Expression {
   String toString() {
     return '!$name';
   }
+
+  @override
+  List<Token> toTokens() {
+    return [ConstantToken(name)];
+  }
 }
 
 class ConstantExpression extends Expression {
@@ -398,6 +410,11 @@ class ConstantExpression extends Expression {
   String toString() {
     return name.name;
   }
+
+  @override
+  List<Token> toTokens() {
+    return [ConstantToken(name.name)];
+  }
 }
 
 class NumberExpression extends Expression {
@@ -416,6 +433,11 @@ class NumberExpression extends Expression {
   @override
   String toString() {
     return '$value';
+  }
+
+  @override
+  List<Token> toTokens() {
+    return [NumberToken(value.toString())];
   }
 }
 
@@ -446,6 +468,19 @@ class PreviousResultExpression extends Expression {
   String toString() {
     return '[=> $expression]';
   }
+
+  @override
+  List<Token> toTokens() {
+    if (result == null) {
+      return [
+        ParenthesisToken.open(),
+        ...expression.toTokens(),
+        ParenthesisToken.close(),
+      ];
+    }
+
+    return [NumberToken(result.toString())];
+  }
 }
 
 class UnaryExpression extends Expression {
@@ -470,6 +505,11 @@ class UnaryExpression extends Expression {
   @override
   String toString() {
     return '[${operator.symbol} $operand]';
+  }
+
+  @override
+  List<Token> toTokens() {
+    return [OperatorToken(OperatorTokenType.minus), ...operand.toTokens()];
   }
 }
 
@@ -522,6 +562,18 @@ class BinaryExpression extends Expression {
   String toString() {
     return '[$left ${operator.symbol} $right]';
   }
+
+  @override
+  List<Token> toTokens() {
+    final operatorToken = switch (operator) {
+      BinaryOperator.add => OperatorToken.plus(),
+      BinaryOperator.subtract => OperatorToken.minus(),
+      BinaryOperator.multiply => OperatorToken.multiply(),
+      BinaryOperator.divide => OperatorToken.divide(),
+      BinaryOperator.power => OperatorToken.power(),
+    };
+    return [...left.toTokens(), operatorToken, ...right.toTokens()];
+  }
 }
 
 class ParenthesisGroupExpression extends Expression {
@@ -543,6 +595,19 @@ class ParenthesisGroupExpression extends Expression {
   @override
   String toString() {
     return '($expression)';
+  }
+
+  @override
+  List<Token> toTokens() {
+    if (isClosed) {
+      return [
+        ParenthesisToken.open(),
+        ...expression.toTokens(),
+        ParenthesisToken.close(),
+      ];
+    } else {
+      return [ParenthesisToken.open(), ...expression.toTokens()];
+    }
   }
 }
 
@@ -572,6 +637,24 @@ class FunctionExpression extends Expression {
   String toString() {
     return '${function.name}{$argument}';
   }
+
+  @override
+  List<Token> toTokens() {
+    if (isClosed) {
+      return [
+        FunctionToken(function.name),
+        ParenthesisToken.open(),
+        ...argument.toTokens(),
+        ParenthesisToken.close(),
+      ];
+    } else {
+      return [
+        FunctionToken(function.name),
+        ParenthesisToken.open(),
+        ...argument.toTokens(),
+      ];
+    }
+  }
 }
 
 class UnknownFunctionExpression extends Expression {
@@ -598,5 +681,23 @@ class UnknownFunctionExpression extends Expression {
   @override
   String toString() {
     return '!$function{$argument}';
+  }
+
+  @override
+  List<Token> toTokens() {
+    if (isClosed) {
+      return [
+        FunctionToken(function),
+        ParenthesisToken.open(),
+        ...argument.toTokens(),
+        ParenthesisToken.close(),
+      ];
+    } else {
+      return [
+        FunctionToken(function),
+        ParenthesisToken.open(),
+        ...argument.toTokens(),
+      ];
+    }
   }
 }

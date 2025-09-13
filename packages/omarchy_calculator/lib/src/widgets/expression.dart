@@ -1,11 +1,12 @@
 import 'package:calc_engine/calc_engine.dart';
 import 'package:flutter_omarchy/flutter_omarchy.dart';
-import 'package:omarchy_calculator/src/features/calculator/state/notifier.dart';
 
 /// A widget that displays a mathematical expression with syntax highlighting.
 class ExpressionView extends StatelessWidget {
   const ExpressionView(
-    this.state, {
+    this.context,
+    this.expression,
+    this.result, {
     super.key,
     required this.fontSize,
     this.textAlign,
@@ -13,7 +14,9 @@ class ExpressionView extends StatelessWidget {
   });
 
   final double fontSize;
-  final CalculatorState state;
+  final CalcContext context;
+  final EvalResult result;
+  final Expression expression;
   final TextAlign? textAlign;
   final bool withResult;
 
@@ -23,9 +26,9 @@ class ExpressionView extends StatelessWidget {
     return Text.rich(
       TextSpan(
         children: [
-          formatExpression(state.context, fontSize, theme, state.expression),
+          formatExpression(this.context, fontSize, theme, expression),
           if (withResult)
-            switch (state.result) {
+            switch (result) {
               SuccessEval(:final result) => TextSpan(
                 text: ' = $result',
                 style: theme.text.bold.copyWith(
