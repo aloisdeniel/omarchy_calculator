@@ -5,14 +5,16 @@ import 'package:omarchy_calculator/src/features/history/state/state.dart';
 import 'package:omarchy_calculator/src/services/database/database.dart';
 
 class HistoryNotifier extends ChangeNotifier {
-  HistoryNotifier({required this.context});
+  HistoryNotifier({required this.context}) {
+    restore();
+  }
 
   final CalcContext context;
   final List<HistoryItemState> _history = <HistoryItemState>[];
 
   List<HistoryItemState> get history => _history;
 
-  void restore() async {
+  Future<void> restore() async {
     final result = await AppDatabase.instance.history.getAll();
     _history.clear();
     _history.addAll(
