@@ -454,6 +454,11 @@ class CompiledApp {
         }
         return null;
       },
+      _1293: () => {
+        return typeof process != "undefined" &&
+               Object.prototype.toString.call(process) == "[object process]" &&
+               process.platform == "win32"
+      },
       _1294: () => new WeakMap(),
       _1295: (map, o) => map.get(o),
       _1296: (map, o, v) => map.set(o, v),
