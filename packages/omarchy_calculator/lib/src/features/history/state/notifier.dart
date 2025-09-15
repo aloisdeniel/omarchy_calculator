@@ -17,18 +17,16 @@ class HistoryNotifier extends ChangeNotifier {
   Future<void> restore() async {
     final result = await AppDatabase.instance.history.getAll();
     _history.clear();
-    _history.addAll(
-      result.items.map((x) {
-        Expression? expression;
-        try {
-          final tokens = tokenize(x.commands);
-          expression = parse(context, tokens);
-        } catch (_) {
-          // If parsing fails, we leave the expression as null
-        }
-        return HistoryItemState(item: x, expression: expression);
-      }),
-    );
+    for (final x in result.items) {
+      Expression? expression;
+      try {
+        final tokens = tokenize(x.commands);
+        expression = parse(context, tokens);
+      } catch (_) {
+        // If parsing fails, we leave the expression as null
+      }
+      _history.add(HistoryItemState(item: x, expression: expression));
+    }
     notifyListeners();
   }
 
@@ -50,9 +48,15 @@ class HistoryNotifier extends ChangeNotifier {
     notifyListeners();
   }
 
+  void delete(HistoryItemState state) async {
+    _history.removeWhere((s) => s.item.id == state.item.id);
+    notifyListeners();
+    await AppDatabase.instance.history.delete(state.item.id);
+  }
+
   void clear() async {
-    await AppDatabase.instance.history.clear();
     _history.clear();
     notifyListeners();
+    await AppDatabase.instance.history.clear();
   }
 }

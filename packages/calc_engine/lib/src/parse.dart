@@ -4,7 +4,11 @@ import 'package:calc_engine/src/functions.dart';
 import 'package:decimal/decimal.dart';
 import 'tokenize.dart';
 
-Expression parse(CalcContext context, List<Token> tokens) {
+Expression parse(
+  CalcContext context,
+  List<Token> tokens, {
+  Expression? previousExpression,
+}) {
   if (tokens.isEmpty) return const EmptyExpression();
 
   // Split by equals sign
@@ -20,7 +24,7 @@ Expression parse(CalcContext context, List<Token> tokens) {
     return result;
   });
 
-  Expression? lastExpression;
+  Expression? lastExpression = previousExpression;
   for (final calculation in calculations.where((x) => x.isNotEmpty)) {
     final parser = _Parser(context, calculation);
     final step = parser.readExpression(
@@ -316,6 +320,13 @@ class _Parser {
 
 sealed class ParsingError {
   const ParsingError();
+}
+
+class InvalidCharacterError extends ParsingError {
+  const InvalidCharacterError(this.index);
+  final int index;
+  @override
+  String toString() => 'Invalid character: $index';
 }
 
 class OtherError extends ParsingError {

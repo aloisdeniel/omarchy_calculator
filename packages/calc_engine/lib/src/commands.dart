@@ -1,3 +1,5 @@
+import 'package:calc_engine/src/parse.dart';
+
 /// Base class for calculator actions.
 sealed class Command {
   const Command();
@@ -82,7 +84,11 @@ sealed class Command {
               i++;
             }
             i--;
-            commands.add(ConstantCommand(name.toString()));
+            if (name.isNotEmpty) {
+              commands.add(ConstantCommand(name.toString()));
+            } else {
+              throw InvalidCharacterError(i);
+            }
           }
       }
     }

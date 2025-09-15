@@ -15,9 +15,15 @@ class HistoryItem {
   final DateTime timestamp;
 
   factory HistoryItem.fromMap(Map<String, dynamic> map) {
+    List<Command> commands;
+    try {
+      commands = Command.parse(map['commands'] as String);
+    } catch (_) {
+      commands = const [];
+    }
     return HistoryItem(
       id: map['id'] as int,
-      commands: Command.parse(map['commands'] as String),
+      commands: commands,
       result: Decimal.parse(map['result'] as String),
       timestamp: DateTime.parse(map['timestamp'] as String),
     );

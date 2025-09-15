@@ -195,7 +195,20 @@ class _HistoryTile extends StatelessWidget {
               PointerState(isHovering: true) => theme.colors.selectedText,
               _ => theme.colors.foreground,
             },
-            child: child!,
+            child: Row(
+              children: [
+                Expanded(child: child!),
+                AnimatedOpacity(
+                  duration: const Duration(milliseconds: 120),
+                  opacity: state.isHovering ? 1 : 0,
+                  child: OmarchyButton(
+                    style: OmarchyButtonStyle.bar(AnsiColor.black),
+                    onPressed: () => notifier.delete(item),
+                    child: Icon(OmarchyIcons.octTrash),
+                  ),
+                ),
+              ],
+            ),
           ),
         );
       },

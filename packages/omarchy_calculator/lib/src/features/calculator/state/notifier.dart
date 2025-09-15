@@ -4,6 +4,7 @@ import 'package:calc_engine/calc_engine.dart';
 import 'package:flutter/widgets.dart';
 import 'package:omarchy_calculator/src/features/calculator/state/event.dart';
 import 'package:omarchy_calculator/src/features/history/state/state.dart';
+import 'package:omarchy_calculator/src/services/database/database.dart';
 
 import 'state.dart';
 
@@ -46,6 +47,7 @@ class CalculatorNotifier extends ChangeNotifier {
             context,
             state.id + 1,
             commands,
+            null,
           );
           _current.add(newState);
           notifyListeners();
@@ -63,7 +65,15 @@ class CalculatorNotifier extends ChangeNotifier {
       return;
     }
     final commands = [...state.commands, action];
-    final newState = CalculatorState.eval(context, state.id + 1, commands);
+    final newState = CalculatorState.eval(
+      context,
+      state.id + 1,
+      commands,
+      switch (state.result) {
+        SuccessEval(:final result) when state.isResult => result,
+        _ => null,
+      },
+    );
 
     if (newState.isResult) {
       _current.clear();

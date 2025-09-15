@@ -24,7 +24,7 @@ class CalculatorState {
     commands: [],
     tokens: [],
     input: '',
-    isResult: false,
+    isResult: result != null,
     expression: const EmptyExpression(),
     result: SuccessEval(EmptyExpression(), result ?? Decimal.zero),
     dateTime: DateTime.now(),
@@ -34,11 +34,18 @@ class CalculatorState {
     CalcContext context,
     int id,
     List<Command> commands,
+    Decimal? previousResult,
   ) {
     final effectiveTokens = tokenize(commands);
     final isResult =
         effectiveTokens.isNotEmpty && effectiveTokens.last is EqualsToken;
-    final rawExpression = parse(context, effectiveTokens);
+    final rawExpression = parse(
+      context,
+      effectiveTokens,
+      previousExpression: previousResult != null
+          ? NumberExpression(previousResult)
+          : null,
+    );
     final expression = evalPreviousExpressions(context, rawExpression);
     final result = ce.eval(context, expression);
     final input = ce.input(effectiveTokens);
