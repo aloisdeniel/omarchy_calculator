@@ -3,6 +3,18 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter/widgets.dart';
 
+class AppShortcut {
+  const AppShortcut(
+    this.command, {
+    this.characters = const [],
+    this.keys = const [],
+  });
+
+  final List<String> characters;
+  final List<LogicalKeyboardKey> keys;
+  final Command command;
+}
+
 class AppShortcuts extends StatefulWidget {
   const AppShortcuts({
     super.key,
@@ -11,36 +23,50 @@ class AppShortcuts extends StatefulWidget {
     required this.onCommand,
   });
 
-  static final defaultShortcuts = {
-    LogicalKeyboardKey.digit0: Command.digit(0),
-    LogicalKeyboardKey.digit1: Command.digit(1),
-    LogicalKeyboardKey.digit2: Command.digit(2),
-    LogicalKeyboardKey.digit3: Command.digit(3),
-    LogicalKeyboardKey.digit4: Command.digit(4),
-    LogicalKeyboardKey.digit5: Command.digit(5),
-    LogicalKeyboardKey.digit6: Command.digit(6),
-    LogicalKeyboardKey.digit7: Command.digit(7),
-    LogicalKeyboardKey.digit8: Command.digit(8),
-    LogicalKeyboardKey.digit9: Command.digit(9),
-    LogicalKeyboardKey.parenthesisLeft: Command.openParenthesis(),
-    LogicalKeyboardKey.parenthesisRight: Command.closeParenthesis(),
-    LogicalKeyboardKey.comma: Command.decimalPoint(),
-    LogicalKeyboardKey.period: Command.decimalPoint(),
-    LogicalKeyboardKey.percent: Command.function('percent'),
-    LogicalKeyboardKey.equal: Command.equals(),
-    LogicalKeyboardKey.enter: Command.equals(),
-    LogicalKeyboardKey.numpadEqual: Command.equals(),
-    LogicalKeyboardKey.asterisk: Command.operator(OperatorType.multiply),
-    LogicalKeyboardKey.numpadMultiply: Command.operator(OperatorType.multiply),
-    LogicalKeyboardKey.keyX: Command.operator(OperatorType.multiply),
-    LogicalKeyboardKey.slash: Command.operator(OperatorType.divide),
-    LogicalKeyboardKey.numpadDivide: Command.operator(OperatorType.divide),
-    LogicalKeyboardKey.minus: Command.operator(OperatorType.minus),
-    LogicalKeyboardKey.add: Command.operator(OperatorType.plus),
-    LogicalKeyboardKey.backspace: Command.backspace(),
-  };
+  static final defaultShortcuts = [
+    AppShortcut(Command.digit(0), characters: ['0']),
+    AppShortcut(Command.digit(1), characters: ['1']),
+    AppShortcut(Command.digit(2), characters: ['2']),
+    AppShortcut(Command.digit(3), characters: ['3']),
+    AppShortcut(Command.digit(4), characters: ['4']),
+    AppShortcut(Command.digit(5), characters: ['5']),
+    AppShortcut(Command.digit(6), characters: ['6']),
+    AppShortcut(Command.digit(7), characters: ['7']),
+    AppShortcut(Command.digit(8), characters: ['8']),
+    AppShortcut(Command.digit(9), characters: ['9']),
+    AppShortcut(Command.openParenthesis(), characters: ['(']),
+    AppShortcut(Command.closeParenthesis(), characters: [')']),
+    AppShortcut(Command.decimalPoint(), characters: ['.', ',']),
+    AppShortcut(Command.function('percent'), characters: ['%']),
+    AppShortcut(
+      Command.equals(),
+      characters: ['='],
+      keys: [LogicalKeyboardKey.enter],
+    ),
+    AppShortcut(
+      Command.operator(OperatorType.multiply),
+      characters: ['*'],
+      keys: [LogicalKeyboardKey.numpadMultiply],
+    ),
+    AppShortcut(
+      Command.operator(OperatorType.divide),
+      characters: ['/'],
+      keys: [LogicalKeyboardKey.numpadDivide],
+    ),
+    AppShortcut(
+      Command.operator(OperatorType.minus),
+      characters: ['-'],
+      keys: [LogicalKeyboardKey.numpadSubtract],
+    ),
+    AppShortcut(
+      Command.operator(OperatorType.plus),
+      characters: ['+'],
+      keys: [LogicalKeyboardKey.numpadAdd],
+    ),
+    AppShortcut(Command.backspace(), keys: [LogicalKeyboardKey.backspace]),
+  ];
 
-  final Map<LogicalKeyboardKey, Command>? shortcuts;
+  final List<AppShortcut>? shortcuts;
   final ValueChanged<Command> onCommand;
   final Widget child;
 
@@ -64,7 +90,13 @@ class _AppShortcutsState extends State<AppShortcuts> {
   bool _handler(KeyEvent event) {
     if (event is KeyDownEvent) {
       final shortcuts = widget.shortcuts ?? AppShortcuts.defaultShortcuts;
-      final shortcut = shortcuts[event.logicalKey];
+      final shortcut = shortcuts
+          .where((x) {
+            return x.characters.contains(event.character) ||
+                x.keys.contains(event.logicalKey);
+          })
+          .map((e) => e.command)
+          .firstOrNull;
       if (shortcut != null) widget.onCommand(shortcut);
     }
     return true;

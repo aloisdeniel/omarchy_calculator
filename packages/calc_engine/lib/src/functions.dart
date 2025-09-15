@@ -104,10 +104,10 @@ class DefaultMathFunctions {
         Decimal.parse(math.exp(x.toDouble()).toString()),
       );
     },
-    aliases: ['expPower'],
+    aliases: ['expPower', 'e_power'],
   );
 
-  static final reciprocal = LambdaMathFunction('1/x', (context, x) {
+  static final reciprocal = LambdaMathFunction('¹⁄ₓ', (context, x) {
     if (x == Decimal.zero) {
       return EvalResult.failure(
         NumberExpression(x),

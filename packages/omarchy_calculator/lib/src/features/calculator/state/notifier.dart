@@ -73,6 +73,8 @@ class CalculatorNotifier extends ChangeNotifier {
     _current.add(newState);
 
     notifyListeners();
+
+    _events.add(CalculatorCommandEvent(action));
   }
 
   void restore(HistoryItemState state) {

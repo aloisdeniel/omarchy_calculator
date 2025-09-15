@@ -60,7 +60,7 @@ class ConfigNotifier extends ChangeNotifier {
     if (Platform.isLinux) {
       final home =
           Platform.environment['HOME'] ?? Platform.environment['USERPROFILE'];
-      return File('$home/.$packageId/config.yaml');
+      return File('$home/.config/$packageId/calculator.yaml');
     }
     final doc = await getApplicationDocumentsDirectory();
     return File('${doc.path}/config.yaml');

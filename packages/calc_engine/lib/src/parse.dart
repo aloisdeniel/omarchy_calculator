@@ -152,35 +152,14 @@ class _Parser {
         token = peekToken();
       }
 
-      final operand = readPostfixExpression(lastExpression);
+      final operand = readPrimaryExpression(lastExpression);
       return UnaryExpression(
         UnaryOperator.negate,
         operand ?? const EmptyExpression(),
       );
     }
 
-    return readPostfixExpression(lastExpression);
-  }
-
-  Expression? readPostfixExpression(Expression? lastExpression) {
-    var result = readPrimaryExpression(lastExpression);
-
-    while (result != null) {
-      final token = peekToken();
-      if (token is FunctionToken) {
-        _index++;
-
-        final constant = context.findFunction(token.function);
-        result = switch (constant) {
-          MathFunction() => FunctionExpression(constant, result),
-          null => UnknownFunctionExpression(token.function, result),
-        };
-      } else {
-        break;
-      }
-    }
-
-    return result;
+    return readPrimaryExpression(lastExpression);
   }
 
   Expression? readPrimaryExpression(Expression? lastExpression) {
@@ -219,6 +198,13 @@ class _Parser {
 
       case FunctionToken(:final function):
         final found = context.findFunction(function);
+
+        // Open parenthesis is optional after function name
+        final parenthesisOpen = peekToken();
+        if (parenthesisOpen is ParenthesisToken && parenthesisOpen.isOpen) {
+          _index++;
+        }
+
         final inner = readAddSubExpression(lastExpression);
 
         if (inner == null) {

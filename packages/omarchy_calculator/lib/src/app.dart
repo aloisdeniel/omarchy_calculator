@@ -68,6 +68,8 @@ class _AppLayoutState extends State<AppLayout> {
   final _mainPane = GlobalKey();
   NotifiersScope? scope;
   StreamSubscription<CalculatorEvent>? _calculatorEvents;
+  OmarchySidePanelController _sidePanelController =
+      OmarchySidePanelController();
 
   void _onCalculatorEvent(CalculatorEvent event) {
     if (event is CalculatorCalculateResultEvent) {
@@ -88,6 +90,7 @@ class _AppLayoutState extends State<AppLayout> {
   void dispose() {
     super.dispose();
     _calculatorEvents?.cancel();
+    _sidePanelController.dispose();
   }
 
   @override
@@ -115,29 +118,33 @@ class _AppLayoutState extends State<AppLayout> {
             final calc = CalculatorScreen(
               onOpenHistory: !isHistoryAlwaysVisible
                   ? () {
-                      // TODO:
+                      _sidePanelController.isVisible =
+                          !_sidePanelController.isVisible;
                     }
                   : null,
               layouts: layouts,
             );
+            final historyPanel = FadeIn(
+              child: HistoryScreen(
+                onSelect: (v) {
+                  scope.calculator.restore(v);
+                },
+              ),
+            );
             if (isHistoryAlwaysVisible) {
               return Row(
                 children: [
-                  Expanded(
-                    child: FadeIn(
-                      child: HistoryScreen(
-                        onSelect: (v) {
-                          scope.calculator.restore(v);
-                        },
-                      ),
-                    ),
-                  ),
+                  Expanded(child: historyPanel),
                   OmarchyDivider.horizontal(),
                   SizedBox(key: _mainPane, width: 1000, child: calc),
                 ],
               );
             }
-            return calc;
+            return OmarchySidePanel(
+              controller: _sidePanelController,
+              panel: historyPanel,
+              child: calc,
+            );
           },
         ),
       ),

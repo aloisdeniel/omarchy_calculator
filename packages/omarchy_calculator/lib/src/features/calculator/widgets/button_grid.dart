@@ -1,7 +1,10 @@
+import 'dart:async';
 import 'dart:math' as math;
 
 import 'package:calc_engine/calc_engine.dart';
 import 'package:flutter_omarchy/flutter_omarchy.dart';
+import 'package:omarchy_calculator/src/app.dart';
+import 'package:omarchy_calculator/src/features/calculator/state/event.dart';
 import 'package:omarchy_calculator/src/features/config/state/config.dart';
 
 class ButtonGrid extends StatefulWidget {
@@ -91,29 +94,65 @@ class _ButtonGridState extends State<ButtonGrid> {
   }
 }
 
-class CalculatorButton extends StatelessWidget {
+class CalculatorButton extends StatefulWidget {
   const CalculatorButton(this.button, {super.key, required this.onPressed});
 
   final Button button;
   final VoidCallback onPressed;
 
-  Widget symbol(bool isSmall) => switch (button.icon) {
+  @override
+  State<CalculatorButton> createState() => _CalculatorButtonState();
+}
+
+class _CalculatorButtonState extends State<CalculatorButton> {
+  final _simulatedPress = SimulatedPressController();
+  StreamSubscription<CalculatorEvent>? _subscription;
+
+  Widget symbol(bool isSmall) => switch (widget.button.icon) {
     IconData data => Icon(data, size: isSmall ? 30 : 48),
-    null => Text(button.label, style: TextStyle(fontSize: isSmall ? 20 : 32)),
+    null => Text(
+      widget.button.label,
+      style: TextStyle(fontSize: isSmall ? 20 : 32),
+    ),
   };
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    final notifier = NotifiersScope.of(context).calculator;
+    _subscription?.cancel();
+    _subscription = notifier.events.listen((e) {
+      if (e case CalculatorCommandEvent(
+        :final command,
+      ) when command == widget.button.command) {
+        _simulatedPress.press();
+      }
+    });
+  }
+
+  @override
+  void dispose() {
+    _subscription?.cancel();
+    _simulatedPress.dispose();
+    super.dispose();
+  }
+
   @override
   Widget build(BuildContext context) {
     return FadeIn(
       child: LayoutBuilder(
         builder: (context, layout) {
           final isSmall = layout.maxHeight < 75 || layout.maxWidth < 80;
-          return OmarchyButton(
-            style: OmarchyButtonStyle.filled(
-              button.color,
-              padding: EdgeInsets.zero,
+          return SimulatedPress(
+            controller: _simulatedPress,
+            child: OmarchyButton(
+              style: OmarchyButtonStyle.filled(
+                widget.button.color,
+                padding: EdgeInsets.zero,
+              ),
+              onPressed: widget.onPressed,
+              child: Center(child: symbol(isSmall)),
             ),
-            onPressed: onPressed,
-            child: Center(child: symbol(isSmall)),
           );
         },
       ),

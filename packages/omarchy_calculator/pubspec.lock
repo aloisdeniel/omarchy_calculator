@@ -265,10 +265,10 @@ packages:
     dependency: "direct main"
     description:
       name: flutter_omarchy
-      sha256: "6cd36c36c5c3f17f2d56ba7f600ed45a620fbaeff0a87b6846ce3af4aaa4d402"
+      sha256: eb82330b852501f0d23cb22a444ad7e6b9c540c8f07973fc023096bd3b25372c
       url: "https://pub.dev"
     source: hosted
-    version: "0.1.8"
+    version: "0.1.9"
   flutter_test:
     dependency: "direct dev"
     description: flutter
