@@ -106,10 +106,19 @@ class _Parser {
           (token.operator == OperatorTokenType.multiply ||
               token.operator == OperatorTokenType.divide)) {
         final finalOperator = _resolveConsecutiveOperators(tokens);
-
         final right = readPowerExpression(lastExpression);
         result = BinaryExpression(
           BinaryOperator.fromToken(finalOperator!),
+          result,
+          right ?? const EmptyExpression(),
+        );
+      } else if (token
+          case FunctionToken() ||
+              ConstantToken() ||
+              ParenthesisToken(isOpen: true)) {
+        final right = readMulDivExpression(lastExpression);
+        result = BinaryExpression(
+          BinaryOperator.multiply,
           result,
           right ?? const EmptyExpression(),
         );
