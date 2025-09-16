@@ -2,7 +2,7 @@ import 'dart:io';
 
 import 'package:flutter/material.dart';
 import 'package:flutter_omarchy/flutter_omarchy.dart';
-import 'package:omarchy_calculator/preview.dart';
+import 'package:flutter_omarchy/preview.dart';
 import 'package:omarchy_calculator/src/app.dart';
 
 import 'app_golden_test.dart';
