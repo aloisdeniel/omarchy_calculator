@@ -15,12 +15,12 @@ class AppDatabase {
     return _instance!;
   }
 
-  static Future<void> init() async {
+  static Future<void> init([bool memory = false]) async {
     if (_instance != null) {
       return;
     }
 
-    if (kIsWeb) {
+    if (memory || kIsWeb) {
       _instance = AppDatabase._memory();
       return;
     }

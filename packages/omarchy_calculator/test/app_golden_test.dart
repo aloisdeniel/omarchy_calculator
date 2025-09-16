@@ -8,6 +8,7 @@ import 'package:flutter/foundation.dart';
 import 'package:omarchy_calculator/src/features/calculator/state/event.dart';
 import 'package:omarchy_calculator/src/features/calculator/state/notifier.dart';
 import 'package:omarchy_calculator/src/features/history/state/state.dart';
+import 'package:omarchy_calculator/src/services/database/database.dart';
 
 import 'cover.dart';
 
@@ -18,6 +19,7 @@ Future<void> testApp({
   required String input,
 }) async {
   testWidgets(description, (tester) async {
+    await AppDatabase.init(true);
     const columns = 4;
     final rows = (OmarchyColorThemes.all.length / columns.toDouble()).ceil();
     tester.view.physicalSize = Size(size.width * columns, size.height * rows);
@@ -58,6 +60,7 @@ Future<void> testApp({
 
 Future<void> buildCover() async {
   testWidgets('cover', (tester) async {
+    await AppDatabase.init(true);
     await tester.runAsync(() async {
       await precacheImage(
         FileImage(File("test/assets/tokyonight-wallpaper.png")),

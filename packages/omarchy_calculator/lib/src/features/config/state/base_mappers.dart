@@ -114,7 +114,10 @@ class CommandMapper extends SimpleMapper<Command> {
   @override
   Command decode(dynamic value) {
     if (value is String) {
-      return Command.parse(value).first;
+      final commands = Command.parse(value);
+      if (commands.length == 1) {
+        return commands.first;
+      }
     }
 
     throw ArgumentError.value(value, 'value', 'Invalid Command format');
