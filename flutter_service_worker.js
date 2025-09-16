@@ -50,7 +50,7 @@ const RESOURCES = {"canvaskit/skwasm.js": "1ef3ea3a0fec4569e5d531da25f34095",
 "assets/packages/flutter_omarchy/lib/fonts/CaskaydiaMonoNerdFontMono-Regular.ttf": "2c80729ab4100535775b67a8061829ec",
 "assets/packages/flutter_omarchy/lib/fonts/CaskaydiaMonoNerdFontMono-Italic.ttf": "43767f5c39563d882c8e27344222e5fe",
 "main.dart.mjs": "53c508e346f0b9fd002d36facccebf4d",
-"flutter_bootstrap.js": "662450a3f61eba3f10eaf69a38424a25",
+"flutter_bootstrap.js": "fef996f4be00a21bf1ccfa05fff02132",
 "favicon.png": "5dcef449791fa27946b3d35ad8803796",
 "index.html": "3efc610e9a4f86876e8e84f18fcccf47",
 "/": "3efc610e9a4f86876e8e84f18fcccf47"};
