@@ -24,6 +24,10 @@ class CalculatorNotifier extends ChangeNotifier {
   Stream<CalculatorEvent> get events => _events.stream;
 
   void execute(Command action) {
+    if (state.canDelete && action is ClearAll) {
+      action = Command.backspace();
+    }
+
     if (action is Memory) {
       switch (action) {
         case MemoryAdd():

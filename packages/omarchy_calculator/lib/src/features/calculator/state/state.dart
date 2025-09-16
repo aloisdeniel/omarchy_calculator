@@ -72,6 +72,9 @@ class CalculatorState {
   final bool isResult;
   final CalcContext context;
 
+  /// Whether the current state can delete the last command.
+  bool get canDelete => commands.isNotEmpty && !isResult;
+
   CalculatorState copyWith({int? id, String? input}) {
     return CalculatorState(
       context: context,

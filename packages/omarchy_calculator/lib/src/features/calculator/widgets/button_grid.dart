@@ -5,6 +5,7 @@ import 'package:calc_engine/calc_engine.dart';
 import 'package:flutter_omarchy/flutter_omarchy.dart';
 import 'package:omarchy_calculator/src/app.dart';
 import 'package:omarchy_calculator/src/features/calculator/state/event.dart';
+import 'package:omarchy_calculator/src/features/calculator/state/notifier.dart';
 import 'package:omarchy_calculator/src/features/config/state/config.dart';
 
 class ButtonGrid extends StatefulWidget {
@@ -108,13 +109,26 @@ class _CalculatorButtonState extends State<CalculatorButton> {
   final _simulatedPress = SimulatedPressController();
   StreamSubscription<CalculatorEvent>? _subscription;
 
-  Widget symbol(bool isSmall) => switch (widget.button.icon) {
-    IconData data => Icon(data, size: isSmall ? 30 : 48),
-    null => Text(
-      widget.button.label,
-      style: TextStyle(fontSize: isSmall ? 20 : 32),
-    ),
-  };
+  Button button(CalculatorNotifier notifier) {
+    var button = widget.button;
+    if (button.command == Command.clearAll() && notifier.state.canDelete) {
+      return Button(
+        label: 'C',
+        icon: OmarchyIcons.mdBackspaceOutline,
+        command: Command.backspace(),
+        color: button.color,
+        size: button.size,
+      );
+    }
+    return button;
+  }
+
+  Widget symbol(Button button, bool isSmall) {
+    return switch (button.icon) {
+      IconData data => Icon(data, size: isSmall ? 30 : 48),
+      null => Text(button.label, style: TextStyle(fontSize: isSmall ? 20 : 32)),
+    };
+  }
 
   @override
   void didChangeDependencies() {
@@ -139,20 +153,28 @@ class _CalculatorButtonState extends State<CalculatorButton> {
 
   @override
   Widget build(BuildContext context) {
+    final notifier = NotifiersScope.of(context).calculator;
+
     return FadeIn(
       child: LayoutBuilder(
         builder: (context, layout) {
           final isSmall = layout.maxHeight < 75 || layout.maxWidth < 80;
-          return SimulatedPress(
-            controller: _simulatedPress,
-            child: OmarchyButton(
-              style: OmarchyButtonStyle.filled(
-                widget.button.color,
-                padding: EdgeInsets.zero,
-              ),
-              onPressed: widget.onPressed,
-              child: Center(child: symbol(isSmall)),
-            ),
+          return AnimatedBuilder(
+            animation: notifier,
+            builder: (context, _) {
+              final button = this.button(notifier);
+              return SimulatedPress(
+                controller: _simulatedPress,
+                child: OmarchyButton(
+                  style: OmarchyButtonStyle.filled(
+                    widget.button.color,
+                    padding: EdgeInsets.zero,
+                  ),
+                  onPressed: widget.onPressed,
+                  child: Center(child: symbol(button, isSmall)),
+                ),
+              );
+            },
           );
         },
       ),
