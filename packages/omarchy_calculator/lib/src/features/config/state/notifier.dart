@@ -39,6 +39,11 @@ class ConfigNotifier extends ChangeNotifier {
   }
 
   Future<void> save(String yaml) async {
+    if (kIsWeb) {
+      _config = Config.fromYaml(yaml);
+      notifyListeners();
+      return;
+    }
     final file = await _defaultFile();
     await file.writeAsString(yaml);
     _config = Config.fromYaml(yaml);
