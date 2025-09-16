@@ -130,7 +130,7 @@ class _Parser {
   }
 
   Expression? readPowerExpression(Expression? lastExpression) {
-    var result = readUnaryExpression(lastExpression);
+    var result = readSpecialExpression(lastExpression);
 
     if (result != null) {
       final token = peekToken();
@@ -141,6 +141,33 @@ class _Parser {
           BinaryOperator.power,
           result,
           right ?? EmptyExpression(),
+        );
+      }
+    }
+    return result;
+  }
+
+  /// Handles special expressions like "mod" and "nthRoot" preceded by a value.
+  Expression? readSpecialExpression(Expression? lastExpression) {
+    var result = readUnaryExpression(lastExpression);
+
+    if (result != null) {
+      final token = peekToken();
+      final function = switch (token) {
+        FunctionToken(function: 'mod' || 'modulo' || 'modulus') =>
+          DefaultMathFunctions.modulo,
+        FunctionToken(function: 'ⁿ√' || 'nthRoot' || 'n_root') =>
+          DefaultMathFunctions.nthRoot,
+        _ => null,
+      };
+
+      if (function != null) {
+        _index++;
+        result = _readFunctionArgs(
+          lastExpression,
+          function,
+          result,
+          function.name,
         );
       }
     }
@@ -211,45 +238,59 @@ class _Parser {
 
       case FunctionToken(:final function):
         final found = context.findFunction(function);
-
-        // Open parenthesis is optional after function name
-        final parenthesisOpen = peekToken();
-        if (parenthesisOpen is ParenthesisToken && parenthesisOpen.isOpen) {
-          _index++;
-        }
-
-        final inner = readAddSubExpression(lastExpression);
-
-        if (inner == null) {
-          const arg = EmptyExpression();
-          return switch (found) {
-            MathFunction() => FunctionExpression(found, arg, isClosed: false),
-            null => UnknownFunctionExpression(
-              token.function,
-              arg,
-              isClosed: false,
-            ),
-          };
-        }
-
-        final following = peekToken();
-        if (following == null ||
-            following is! ParenthesisToken ||
-            following.isOpen) {
-          return switch (found) {
-            MathFunction() => FunctionExpression(found, inner, isClosed: false),
-            null => UnknownFunctionExpression(function, inner, isClosed: false),
-          };
-        }
-        _index++;
-        return switch (found) {
-          MathFunction() => FunctionExpression(found, inner, isClosed: true),
-          null => UnknownFunctionExpression(function, inner, isClosed: true),
-        };
+        return _readFunctionArgs(lastExpression, found, null, function);
 
       default:
         return null;
     }
+  }
+
+  Expression _readFunctionArgs(
+    Expression? lastExpression,
+    MathFunction? found,
+    Expression? leftArg,
+    String function,
+  ) {
+    // Open parenthesis is optional after function name
+    final parenthesisOpen = peekToken();
+    if (parenthesisOpen is ParenthesisToken && parenthesisOpen.isOpen) {
+      _index++;
+    }
+
+    final inner = readAddSubExpression(lastExpression);
+
+    if (inner == null) {
+      final arg = [if (leftArg != null) leftArg, EmptyExpression()];
+      return switch (found) {
+        MathFunction() => FunctionExpression(found, arg, isClosed: false),
+        null => UnknownFunctionExpression(function, arg, isClosed: false),
+      };
+    }
+    final args = <Expression>[if (leftArg != null) leftArg, inner];
+
+    while (peekToken() is CommaToken) {
+      _index++;
+      final arg = readAddSubExpression(lastExpression);
+      if (arg != null) {
+        args.add(arg);
+      } else {
+        args.add(const EmptyExpression());
+        break;
+      }
+    }
+
+    if (peekToken() case ParenthesisToken(isOpen: false)) {
+      _index++;
+      return switch (found) {
+        MathFunction() => FunctionExpression(found, args, isClosed: true),
+        null => UnknownFunctionExpression(function, args, isClosed: true),
+      };
+    }
+
+    return switch (found) {
+      MathFunction() => FunctionExpression(found, args, isClosed: false),
+      null => UnknownFunctionExpression(function, args, isClosed: false),
+    };
   }
 
   /// Resolves consecutive operators according to standard mathematical rules.
@@ -620,90 +661,82 @@ class ParenthesisGroupExpression extends Expression {
 class FunctionExpression extends Expression {
   const FunctionExpression(
     this.function,
-    this.argument, {
+    this.arguments, {
     this.isClosed = true,
   });
   final MathFunction function;
-  final Expression argument;
+  final List<Expression> arguments;
   final bool isClosed;
 
   @override
   bool operator ==(Object other) {
     if (identical(this, other)) return true;
-    return other is FunctionExpression &&
-        other.isClosed == isClosed &&
-        other.function == function &&
-        other.argument == argument;
+    if (other is! FunctionExpression) return false;
+    if (arguments.length != other.arguments.length) return false;
+    for (var i = 0; i < arguments.length; i++) {
+      if (arguments[i] != other.arguments[i]) return false;
+    }
+    return other.isClosed == isClosed && other.function == function;
   }
 
   @override
-  int get hashCode => Object.hash(function, argument);
+  int get hashCode => Object.hash(function, Object.hashAll(arguments));
 
   @override
   String toString() {
-    return '${function.name}{$argument}';
+    return '${function.name}{${arguments.join(', ')}}';
   }
 
   @override
   List<Token> toTokens() {
-    if (isClosed) {
-      return [
-        FunctionToken(function.name),
-        ParenthesisToken.open(),
-        ...argument.toTokens(),
-        ParenthesisToken.close(),
-      ];
-    } else {
-      return [
-        FunctionToken(function.name),
-        ParenthesisToken.open(),
-        ...argument.toTokens(),
-      ];
-    }
+    return [
+      FunctionToken(function.name),
+      ParenthesisToken.open(),
+      for (var i = 0; i < arguments.length; i++) ...[
+        ...arguments[i].toTokens(),
+      ],
+      if (isClosed) ParenthesisToken.close(),
+    ];
   }
 }
 
 class UnknownFunctionExpression extends Expression {
   const UnknownFunctionExpression(
     this.function,
-    this.argument, {
+    this.arguments, {
     this.isClosed = true,
   });
   final String function;
-  final Expression argument;
+  final List<Expression> arguments;
   final bool isClosed;
   @override
   bool operator ==(Object other) {
     if (identical(this, other)) return true;
-    return other is UnknownFunctionExpression &&
-        other.isClosed == isClosed &&
-        other.function == function &&
-        other.argument == argument;
+    if (other is! UnknownFunctionExpression) return false;
+    if (arguments.length != other.arguments.length) return false;
+    for (var i = 0; i < arguments.length; i++) {
+      if (arguments[i] != other.arguments[i]) return false;
+    }
+    return other.isClosed == isClosed && other.function == function;
   }
 
   @override
-  int get hashCode => Object.hash(function, argument);
+  int get hashCode => Object.hash(function, Object.hashAll(arguments));
 
   @override
   String toString() {
-    return '!$function{$argument}';
+    return '!$function{${arguments.join(', ')}}';
   }
 
   @override
   List<Token> toTokens() {
-    if (isClosed) {
-      return [
-        FunctionToken(function),
-        ParenthesisToken.open(),
-        ...argument.toTokens(),
-        ParenthesisToken.close(),
-      ];
-    } else {
-      return [
-        FunctionToken(function),
-        ParenthesisToken.open(),
-        ...argument.toTokens(),
-      ];
-    }
+    return [
+      FunctionToken(function),
+      ParenthesisToken.open(),
+      for (var i = 0; i < arguments.length; i++) ...[
+        ...arguments[i].toTokens(),
+      ],
+      if (isClosed) ParenthesisToken.close(),
+    ];
   }
 }

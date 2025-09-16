@@ -187,19 +187,16 @@ class ButtonLayout with ButtonLayoutMappable {
         ),
         Button(
           label: 'mod',
-          command: Command.function('modulo'),
+          command: Command.function('mod'),
           color: AnsiColor.magenta,
         ),
-        Button(
-          label: 'x!',
-          command: Command.function('factorial'),
-          color: AnsiColor.magenta,
-        ),
+
         Button(
           label: '%',
           command: Command.function('percent'),
           color: AnsiColor.magenta,
         ),
+        Button(label: ',', command: Command.comma(), color: AnsiColor.magenta),
       ];
 
   factory ButtonLayout.fromName(

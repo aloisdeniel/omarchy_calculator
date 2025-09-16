@@ -62,6 +62,9 @@ List<Token> tokenize(List<Command> commands) {
       case OpenParenthesis():
         flushCurrent();
         result.add(const ParenthesisToken.open());
+      case Comma():
+        flushCurrent();
+        result.add(const CommaToken());
       case CloseParenthesis():
         flushCurrent();
         result.add(const ParenthesisToken.close());
@@ -280,7 +283,7 @@ class EqualsToken extends Token {
   @override
   bool operator ==(Object other) {
     if (identical(this, other)) return true;
-    return other is CommandToken;
+    return other is EqualsToken;
   }
 
   @override
@@ -294,6 +297,29 @@ class EqualsToken extends Token {
   @override
   List<Command> toCommands() {
     return [const Equals()];
+  }
+}
+
+class CommaToken extends Token {
+  const CommaToken();
+
+  @override
+  bool operator ==(Object other) {
+    if (identical(this, other)) return true;
+    return other is CommaToken;
+  }
+
+  @override
+  int get hashCode => runtimeType.hashCode;
+
+  @override
+  String toString() {
+    return ',';
+  }
+
+  @override
+  List<Command> toCommands() {
+    return [const Comma()];
   }
 }
 

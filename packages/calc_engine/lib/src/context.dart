@@ -1,12 +1,46 @@
+import 'dart:math' as math;
+
 import 'package:calc_engine/src/commands.dart';
 import 'package:calc_engine/src/constants.dart';
 import 'package:calc_engine/src/functions.dart';
 import 'package:decimal/decimal.dart';
 
+final _decimalPi = Decimal.parse(math.pi.toString());
+
+enum AngleUnit {
+  degrees,
+  radians;
+
+  Decimal toRadians(Decimal x) {
+    switch (this) {
+      case AngleUnit.degrees:
+        return x *
+            (_decimalPi / Decimal.fromInt(180)).toDecimal(
+              scaleOnInfinitePrecision: 20,
+            );
+      case AngleUnit.radians:
+        return x;
+    }
+  }
+
+  Decimal fromRadians(Decimal x) {
+    switch (this) {
+      case AngleUnit.degrees:
+        return x *
+            (Decimal.fromInt(180) / _decimalPi).toDecimal(
+              scaleOnInfinitePrecision: 20,
+            );
+      case AngleUnit.radians:
+        return x;
+    }
+  }
+}
+
 class CalcContext {
-  CalcContext._(this.constants, this.functions);
+  CalcContext._(this.constants, this.functions, this.angleUnit);
 
   CalcContext({
+    this.angleUnit = AngleUnit.radians,
     List<Constant> constants = const [],
     List<MathFunction> functions = const [],
   }) : constants = {
@@ -62,19 +96,28 @@ class CalcContext {
         }
       }
     }
+    final angleUnitConfig = config['angle_unit'];
+    final angleUnit = angleUnitConfig == 'degrees'
+        ? AngleUnit.degrees
+        : AngleUnit.radians;
 
-    return CalcContext(constants: constants, functions: functions);
+    return CalcContext(
+      constants: constants,
+      functions: functions,
+      angleUnit: angleUnit,
+    );
   }
 
   final Map<String, Constant> constants;
   final Map<String, MathFunction> functions;
+  final AngleUnit angleUnit;
 
   CalcContext withConstant(Constant x) {
-    return CalcContext._({
-      ...constants,
-      x.name: x,
-      for (final alias in x.aliases) alias: x,
-    }, functions);
+    return CalcContext._(
+      {...constants, x.name: x, for (final alias in x.aliases) alias: x},
+      functions,
+      angleUnit,
+    );
   }
 
   Constant? findContant(String name) {

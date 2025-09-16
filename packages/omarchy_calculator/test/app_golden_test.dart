@@ -145,7 +145,7 @@ class CalculatorGoldenNotifier extends ChangeNotifier
 
   @override
   CalculatorState get state =>
-      CalculatorState.eval(context, id, Command.parse(input));
+      CalculatorState.eval(context, id, Command.parse(input), null);
 
   @override
   void execute(Command action) {}

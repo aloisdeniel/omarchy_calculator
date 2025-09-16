@@ -130,11 +130,39 @@ TextSpan formatExpression(
         color: theme.colors.bright.red,
       ),
     ),
-    FunctionExpression(:final function, :final argument, :final isClosed) =>
+    FunctionExpression(:final function, :final arguments, :final isClosed) =>
       switch (function) {
-        _ when function.name == '²' => TextSpan(
+        _ when function == DefaultMathFunctions.cube => TextSpan(
           children: [
-            formatExpression(context, fontSize, theme, argument),
+            TextSpan(
+              text: '(',
+              style: TextStyle(
+                fontSize: fontSize,
+                color: isClosed ? null : theme.colors.bright.black,
+              ),
+            ),
+            formatExpression(context, fontSize, theme, arguments.first),
+            TextSpan(
+              text: ')',
+              style: TextStyle(fontSize: fontSize),
+            ),
+            TextSpan(text: '³'),
+          ],
+        ),
+        _ when function == DefaultMathFunctions.square => TextSpan(
+          children: [
+            TextSpan(
+              text: '(',
+              style: TextStyle(
+                fontSize: fontSize,
+                color: isClosed ? null : theme.colors.bright.black,
+              ),
+            ),
+            formatExpression(context, fontSize, theme, arguments.first),
+            TextSpan(
+              text: ')',
+              style: TextStyle(fontSize: fontSize),
+            ),
             TextSpan(text: '²'),
           ],
         ),
@@ -154,7 +182,15 @@ TextSpan formatExpression(
                 color: isClosed ? null : theme.colors.bright.black,
               ),
             ),
-            formatExpression(context, fontSize, theme, argument),
+
+            for (var i = 0; i < arguments.length; i++) ...[
+              if (i > 0)
+                TextSpan(
+                  text: ', ',
+                  style: TextStyle(fontSize: fontSize),
+                ),
+              formatExpression(context, fontSize, theme, arguments[i]),
+            ],
             if (isClosed)
               TextSpan(
                 text: ')',
@@ -165,7 +201,7 @@ TextSpan formatExpression(
       },
     UnknownFunctionExpression(
       :final function,
-      :final argument,
+      :final arguments,
       :final isClosed,
     ) =>
       TextSpan(
@@ -177,7 +213,6 @@ TextSpan formatExpression(
               color: theme.colors.bright.red,
             ),
           ),
-
           TextSpan(
             text: '(',
             style: TextStyle(
@@ -185,7 +220,14 @@ TextSpan formatExpression(
               color: isClosed ? null : theme.colors.bright.black,
             ),
           ),
-          formatExpression(context, fontSize, theme, argument),
+          for (var i = 0; i < arguments.length; i++) ...[
+            if (i > 0)
+              TextSpan(
+                text: ', ',
+                style: TextStyle(fontSize: fontSize),
+              ),
+            formatExpression(context, fontSize, theme, arguments[i]),
+          ],
           if (isClosed) const TextSpan(text: ')'),
         ],
       ),

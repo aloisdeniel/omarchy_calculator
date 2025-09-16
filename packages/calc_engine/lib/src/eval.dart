@@ -35,10 +35,10 @@ Expression evalPreviousExpressions(CalcContext context, Expression expression) {
         operator,
         evalPreviousExpressions(context, operand),
       );
-    case FunctionExpression(:final function, :final argument, :final isClosed):
+    case FunctionExpression(:final function, :final arguments, :final isClosed):
       return FunctionExpression(
         function,
-        evalPreviousExpressions(context, argument),
+        arguments.map((x) => evalPreviousExpressions(context, x)).toList(),
         isClosed: isClosed,
       );
     case ParenthesisGroupExpression(:final expression, :final isClosed):
@@ -50,10 +50,15 @@ Expression evalPreviousExpressions(CalcContext context, Expression expression) {
     case ConstantExpression():
     case NumberExpression():
       return expression;
-    case UnknownFunctionExpression(:final function, :final argument):
+    case UnknownFunctionExpression(
+      :final function,
+      :final arguments,
+      :final isClosed,
+    ):
       return UnknownFunctionExpression(
         function,
-        evalPreviousExpressions(context, argument),
+        arguments.map((x) => evalPreviousExpressions(context, x)).toList(),
+        isClosed: isClosed,
       );
     case UnknownConstantExpression():
       return expression;
@@ -63,7 +68,7 @@ Expression evalPreviousExpressions(CalcContext context, Expression expression) {
 EvalResult _evaluateExpression(CalcContext context, Expression expression) {
   switch (expression) {
     case EmptyExpression():
-      return EvalResult.success(expression, Decimal.fromInt(0));
+      return EvalResult.failure(expression, const UncompletedError());
 
     case NumberExpression(value: final value):
       return EvalResult.success(expression, value);
@@ -147,14 +152,25 @@ EvalResult _evaluateExpression(CalcContext context, Expression expression) {
       }
       return _evaluateExpression(context, expression);
 
-    case FunctionExpression(function: final function, argument: final argument):
-      final argumentResult = _evaluateExpression(context, argument);
-      switch (argumentResult) {
-        case SuccessEval():
-          final argumentValue = argumentResult.result;
-          return function.evaluate(context, argumentValue);
-        case FailureEval():
-          return argumentResult;
+    case FunctionExpression(:final function, :final arguments):
+      try {
+        final argumentValues = <Decimal>[];
+        for (final arg in arguments) {
+          final argResult = _evaluateExpression(context, arg);
+          if (argResult is FailureEval) {
+            return argResult;
+          }
+          argumentValues.add((argResult as SuccessEval).result);
+        }
+        return EvalResult.success(
+          expression,
+          function.evaluate(context, argumentValues),
+        );
+      } catch (e) {
+        return EvalResult.failure(
+          expression,
+          e is EvalError ? e : OtherEvalError('$e'),
+        );
       }
 
     case ConstantExpression(:final name):
@@ -225,6 +241,19 @@ class FailureEval extends EvalResult {
 
 sealed class EvalError {
   const EvalError();
+}
+
+class UncompletedError extends EvalError {
+  const UncompletedError();
+
+  @override
+  bool operator ==(Object other) => other is UncompletedError;
+
+  @override
+  int get hashCode => runtimeType.hashCode;
+
+  @override
+  String toString() => 'Uncompleted expression error';
 }
 
 class DivisionByZeroError extends EvalError {

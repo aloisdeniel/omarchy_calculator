@@ -1,5 +1,6 @@
 import 'package:calc_engine/calc_engine.dart';
 import 'package:omarchy_calculator/src/services/database/database.dart';
+import 'package:sqflite_common/sqlite_api.dart';
 
 class HistoryItem {
   HistoryItem({
@@ -30,8 +31,22 @@ class HistoryItem {
   }
 }
 
-class HistoryTable extends Table {
-  const HistoryTable(super.db);
+abstract class HistoryTable implements Table {
+  const factory HistoryTable.sql(Database db) = SqlHistoryTable;
+
+  factory HistoryTable.memory() = MemoryHistoryTable;
+
+  Future<FetchResult<HistoryItem>> getAll([int take = 1000, int? skip]);
+
+  Future<HistoryItem> insert(List<Command> commands, Decimal result);
+
+  Future<int> clear();
+
+  Future<void> delete(int id);
+}
+
+class SqlHistoryTable extends SqlTable implements HistoryTable {
+  const SqlHistoryTable(super.db);
 
   @override
   String get name => 'history';
@@ -84,5 +99,44 @@ class HistoryTable extends Table {
 
   Future<int> clear() async {
     return await db.delete(name);
+  }
+}
+
+class MemoryHistoryTable implements HistoryTable {
+  MemoryHistoryTable();
+
+  static int _nextId = 1;
+
+  final List<HistoryItem> _items = [];
+
+  @override
+  Future<int> clear() async {
+    final count = _items.length;
+    _items.clear();
+    return count;
+  }
+
+  @override
+  Future<void> delete(int id) async {
+    _items.removeWhere((item) => item.id == id);
+  }
+
+  @override
+  Future<FetchResult<HistoryItem>> getAll([int take = 1000, int? skip]) async {
+    final offset = skip ?? 0;
+    final items = _items.skip(offset).take(take).toList();
+    return FetchResult(offset, items, offset + items.length < _items.length);
+  }
+
+  @override
+  Future<HistoryItem> insert(List<Command> commands, Decimal result) async {
+    final item = HistoryItem(
+      id: _nextId++,
+      commands: commands,
+      result: result,
+      timestamp: DateTime.now(),
+    );
+    _items.add(item);
+    return item;
   }
 }

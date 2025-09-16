@@ -4,7 +4,6 @@ import 'package:calc_engine/calc_engine.dart';
 import 'package:flutter/widgets.dart';
 import 'package:omarchy_calculator/src/features/calculator/state/event.dart';
 import 'package:omarchy_calculator/src/features/history/state/state.dart';
-import 'package:omarchy_calculator/src/services/database/database.dart';
 
 import 'state.dart';
 

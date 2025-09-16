@@ -102,6 +102,7 @@ class _ResultDisplay extends StatelessWidget {
   Widget build(BuildContext context) {
     final theme = OmarchyTheme.of(context);
     final text = switch (state.result) {
+      FailureEval(error: UncompletedError()) => '',
       FailureEval(:final error) => error.toString(),
       SuccessEval() when state.input.isNotEmpty => state.input,
       SuccessEval(:final result) => result.toString(),

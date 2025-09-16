@@ -1,5 +1,6 @@
 import 'dart:async';
 
+import 'package:flutter/foundation.dart';
 import 'package:omarchy_calculator/src/services/database/history.dart';
 import 'package:path/path.dart' as p;
 import 'package:path_provider/path_provider.dart';
@@ -19,6 +20,11 @@ class AppDatabase {
       return;
     }
 
+    if (kIsWeb) {
+      _instance = AppDatabase._memory();
+      return;
+    }
+
     sqfliteFfiInit();
 
     var databaseFactory = databaseFactoryFfi;
@@ -29,14 +35,16 @@ class AppDatabase {
 
     final result = AppDatabase._(db);
 
-    for (final table in result.tables) {
+    for (final table in result.tables.whereType<SqlTable>()) {
       await table.createTable();
     }
 
     _instance = result;
   }
 
-  AppDatabase._(Database db) : history = HistoryTable(db);
+  AppDatabase._(Database db) : history = HistoryTable.sql(db);
+
+  AppDatabase._memory() : history = HistoryTable.memory();
 
   final HistoryTable history;
 
@@ -44,9 +52,12 @@ class AppDatabase {
 }
 
 abstract class Table {
-  const Table(this.db);
-  final Database db;
+  const Table();
+}
 
+abstract class SqlTable extends Table {
+  const SqlTable(this.db);
+  final Database db;
   String get name;
 
   Future<void> createTable();

@@ -26,8 +26,10 @@ sealed class Command {
           commands.add(const Command.operator(OperatorType.plus));
         case '-':
           commands.add(const Command.operator(OperatorType.minus));
-        case '.' || ',':
+        case '.':
           commands.add(const Command.decimalPoint());
+        case ',':
+          commands.add(const Command.comma());
         case '=':
           commands.add(const Command.equals());
         case '(':
@@ -104,6 +106,7 @@ sealed class Command {
       ConstantCommand(:final constant) => constant,
       FunctionCommand(:final function) => '#$function',
       Equals() => '=',
+      Comma() => ',',
       ClearAll() => 'CA',
       ClearEntry() => 'CE',
       Backspace() => 'BS',
@@ -120,6 +123,8 @@ sealed class Command {
   const factory Command.digit(int value) = Digit;
 
   const factory Command.decimalPoint() = DecimalPoint;
+
+  const factory Command.comma() = Comma;
 
   const factory Command.operator(OperatorType type) = Operator;
 
@@ -486,6 +491,24 @@ class FunctionCommand extends Command {
 
   @override
   int get hashCode => function.hashCode;
+}
+
+/// Separator for function arguments.
+class Comma extends Command {
+  const Comma();
+  @override
+  String toString() {
+    return ',';
+  }
+
+  @override
+  bool operator ==(Object other) {
+    if (identical(this, other)) return true;
+    return other is Comma;
+  }
+
+  @override
+  int get hashCode => runtimeType.hashCode;
 }
 
 final _idRegExp = RegExp('[a-zA-Z_]');
