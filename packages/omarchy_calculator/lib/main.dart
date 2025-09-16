@@ -1,6 +1,6 @@
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
-import 'package:omarchy_calculator/preview.dart';
+import 'package:flutter_omarchy/preview.dart';
 import 'package:omarchy_calculator/src/app.dart';
 import 'package:omarchy_calculator/src/services/database/database.dart';
 

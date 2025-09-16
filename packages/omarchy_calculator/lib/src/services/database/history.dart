@@ -63,6 +63,7 @@ class SqlHistoryTable extends SqlTable implements HistoryTable {
     ''');
   }
 
+  @override
   Future<HistoryItem> insert(List<Command> commands, Decimal result) async {
     final id = await db.insert(name, {
       'commands': commands.map((x) => x.serialize()).join(),
@@ -76,10 +77,12 @@ class SqlHistoryTable extends SqlTable implements HistoryTable {
     );
   }
 
+  @override
   Future<void> delete(int id) async {
     await db.delete(name, where: 'id = ?', whereArgs: [id]);
   }
 
+  @override
   Future<FetchResult<HistoryItem>> getAll([int take = 1000, int? skip]) async {
     final result = await db.query(
       name,
@@ -97,6 +100,7 @@ class SqlHistoryTable extends SqlTable implements HistoryTable {
     );
   }
 
+  @override
   Future<int> clear() async {
     return await db.delete(name);
   }
