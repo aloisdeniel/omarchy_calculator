@@ -1,0 +1,14 @@
+name: calc_engine
+description: A simple calculation engine.
+version: 0.1.0
+repository: https://github.com/aloisdeniel/omarchy_calculator/calc_engine
+
+environment:
+  sdk: ^3.8.1
+
+dependencies:
+  decimal: ^3.2.4
+
+dev_dependencies:
+  lints: ^5.0.0
+  test: ^1.26.3

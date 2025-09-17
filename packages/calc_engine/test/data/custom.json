@@ -1,0 +1,22 @@
+{
+  "context": {
+    "constants": {
+      "answer": "42"
+    },
+    "functions": {
+      "incr": "x + 1"
+    }
+  },
+  "cases": [
+    [
+      "answer",
+      "answer",
+      "42"
+    ],
+    [
+      "#incr(#incr(3))",
+      "incr{incr{3}}",
+      "5"
+    ]
+  ]
+}

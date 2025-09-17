@@ -1,0 +1,29 @@
+{
+  "cases": [
+    [
+      "19 / 0",
+      "[19 / 0]",
+      "[ERR]:Division by zero"
+    ],
+    [
+      "0 / 0",
+      "[0 / 0]",
+      "[ERR]:Division by zero"
+    ],
+    [
+      "#sqrt((-1))",
+      "√{([- 1])}",
+      "[ERR]:Cannot calculate square root of negative number"
+    ],
+    [
+      "undefined",
+      "!undefined",
+      "[ERR]:Unknown constant"
+    ],
+    [
+      "#undefined(3)",
+      "!undefined{3}",
+      "[ERR]:Unknown function"
+    ]
+  ]
+}
