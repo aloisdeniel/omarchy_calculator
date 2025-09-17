@@ -2,6 +2,7 @@ import 'package:calc_engine/calc_engine.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter/widgets.dart';
+import 'package:omarchy_calculator/src/commands.dart';
 
 class AppShortcut {
   const AppShortcut(
@@ -10,9 +11,19 @@ class AppShortcut {
     this.keys = const [],
   });
 
+  factory AppShortcut.calc(
+    Command command, {
+    List<String> characters = const [],
+    List<LogicalKeyboardKey> keys = const [],
+  }) => AppShortcut(
+    CalculatorCommand(command),
+    characters: characters,
+    keys: keys,
+  );
+
   final List<String> characters;
   final List<LogicalKeyboardKey> keys;
-  final Command command;
+  final AppCommand command;
 }
 
 class AppShortcuts extends StatefulWidget {
@@ -24,50 +35,59 @@ class AppShortcuts extends StatefulWidget {
   });
 
   static final defaultShortcuts = [
-    AppShortcut(Command.digit(0), characters: ['0']),
-    AppShortcut(Command.digit(1), characters: ['1']),
-    AppShortcut(Command.digit(2), characters: ['2']),
-    AppShortcut(Command.digit(3), characters: ['3']),
-    AppShortcut(Command.digit(4), characters: ['4']),
-    AppShortcut(Command.digit(5), characters: ['5']),
-    AppShortcut(Command.digit(6), characters: ['6']),
-    AppShortcut(Command.digit(7), characters: ['7']),
-    AppShortcut(Command.digit(8), characters: ['8']),
-    AppShortcut(Command.digit(9), characters: ['9']),
-    AppShortcut(Command.openParenthesis(), characters: ['(']),
-    AppShortcut(Command.closeParenthesis(), characters: [')']),
-    AppShortcut(Command.decimalPoint(), characters: ['.', ',']),
-    AppShortcut(Command.function('percent'), characters: ['%']),
-    AppShortcut(
+    AppShortcut.calc(Command.digit(0), characters: ['0']),
+    AppShortcut.calc(Command.digit(1), characters: ['1']),
+    AppShortcut.calc(Command.digit(2), characters: ['2']),
+    AppShortcut.calc(Command.digit(3), characters: ['3']),
+    AppShortcut.calc(Command.digit(4), characters: ['4']),
+    AppShortcut.calc(Command.digit(5), characters: ['5']),
+    AppShortcut.calc(Command.digit(6), characters: ['6']),
+    AppShortcut.calc(Command.digit(7), characters: ['7']),
+    AppShortcut.calc(Command.digit(8), characters: ['8']),
+    AppShortcut.calc(Command.digit(9), characters: ['9']),
+    AppShortcut.calc(Command.openParenthesis(), characters: ['(']),
+    AppShortcut.calc(Command.closeParenthesis(), characters: [')']),
+    AppShortcut.calc(Command.decimalPoint(), characters: ['.', ',']),
+    AppShortcut.calc(Command.function('percent'), characters: ['%']),
+    AppShortcut.calc(
       Command.equals(),
       characters: ['='],
       keys: [LogicalKeyboardKey.enter],
     ),
-    AppShortcut(
+    AppShortcut.calc(
       Command.operator(OperatorType.multiply),
       characters: ['*'],
       keys: [LogicalKeyboardKey.numpadMultiply],
     ),
-    AppShortcut(
+    AppShortcut.calc(
       Command.operator(OperatorType.divide),
       characters: ['/'],
       keys: [LogicalKeyboardKey.numpadDivide],
     ),
-    AppShortcut(
+    AppShortcut.calc(
       Command.operator(OperatorType.minus),
       characters: ['-'],
       keys: [LogicalKeyboardKey.numpadSubtract],
     ),
-    AppShortcut(
+    AppShortcut.calc(
       Command.operator(OperatorType.plus),
       characters: ['+'],
       keys: [LogicalKeyboardKey.numpadAdd],
     ),
-    AppShortcut(Command.backspace(), keys: [LogicalKeyboardKey.backspace]),
+    AppShortcut.calc(Command.backspace(), keys: [LogicalKeyboardKey.backspace]),
+    AppShortcut(ToggleHistoryCommand(), keys: [LogicalKeyboardKey.escape]),
+    AppShortcut(
+      PreviousButtonLayoutCommand(),
+      keys: [LogicalKeyboardKey.arrowLeft],
+    ),
+    AppShortcut(
+      NextButtonLayoutCommand(),
+      keys: [LogicalKeyboardKey.arrowRight],
+    ),
   ];
 
   final List<AppShortcut>? shortcuts;
-  final ValueChanged<Command> onCommand;
+  final ValueChanged<AppCommand> onCommand;
   final Widget child;
 
   @override

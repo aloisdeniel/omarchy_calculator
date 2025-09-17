@@ -1,5 +1,6 @@
 import 'dart:async';
 
+import 'package:omarchy_calculator/src/commands.dart';
 import 'package:omarchy_calculator/src/features/calculator/screen.dart';
 import 'package:omarchy_calculator/src/features/calculator/state/event.dart';
 import 'package:omarchy_calculator/src/features/calculator/state/notifier.dart';
@@ -67,8 +68,9 @@ class _AppLayoutState extends State<AppLayout> {
   final layouts = [ButtonLayout.base(), ButtonLayout.scientific()];
   final _mainPane = GlobalKey();
   NotifiersScope? scope;
+  final _appCommands = StreamController<AppCommand>.broadcast();
   StreamSubscription<CalculatorEvent>? _calculatorEvents;
-  OmarchySidePanelController _sidePanelController =
+  final OmarchySidePanelController _sidePanelController =
       OmarchySidePanelController();
 
   void _onCalculatorEvent(CalculatorEvent event) {
@@ -93,13 +95,25 @@ class _AppLayoutState extends State<AppLayout> {
     _sidePanelController.dispose();
   }
 
+  void toggleHistory() {
+    _sidePanelController.isVisible = !_sidePanelController.isVisible;
+  }
+
   @override
   Widget build(BuildContext context) {
     final theme = OmarchyTheme.of(context);
     final scope = NotifiersScope.of(context);
     return AppShortcuts(
       onCommand: (command) {
-        scope.calculator.execute(command);
+        switch (command) {
+          case CalculatorCommand(:final command):
+            scope.calculator.execute(command);
+          case ToggleHistoryCommand():
+            toggleHistory();
+          case NextButtonLayoutCommand():
+          case PreviousButtonLayoutCommand():
+            _appCommands.add(command);
+        }
       },
       child: OmarchyScaffold(
         child: LayoutBuilder(
@@ -112,16 +126,13 @@ class _AppLayoutState extends State<AppLayout> {
                 ),
               );
             }
-            final isHistoryAlwaysVisible =
+            final isHistorySidePanel =
                 layout.maxWidth >
                 layouts.length * CalculatorScreen.gridWidth + 500;
             final calc = CalculatorScreen(
-              onOpenHistory: !isHistoryAlwaysVisible
-                  ? () {
-                      _sidePanelController.isVisible =
-                          !_sidePanelController.isVisible;
-                    }
-                  : null,
+              key: _mainPane,
+              appCommands: _appCommands.stream,
+              onOpenHistory: toggleHistory,
               layouts: layouts,
             );
             final historyPanel = FadeIn(
@@ -131,13 +142,21 @@ class _AppLayoutState extends State<AppLayout> {
                 },
               ),
             );
-            if (isHistoryAlwaysVisible) {
-              return Row(
-                children: [
-                  Expanded(child: historyPanel),
-                  OmarchyDivider.horizontal(),
-                  SizedBox(key: _mainPane, width: 1000, child: calc),
-                ],
+            if (isHistorySidePanel) {
+              return AnimatedBuilder(
+                animation: _sidePanelController,
+                builder: (context, _) {
+                  if (_sidePanelController.isVisible) {
+                    return Row(
+                      children: [
+                        Expanded(child: historyPanel),
+                        OmarchyDivider.horizontal(),
+                        SizedBox(width: 1000, child: calc),
+                      ],
+                    );
+                  }
+                  return calc;
+                },
               );
             }
             return OmarchySidePanel(

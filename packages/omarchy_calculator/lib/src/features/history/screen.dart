@@ -4,6 +4,7 @@ import 'package:intl/intl.dart';
 import 'package:omarchy_calculator/src/app.dart';
 import 'package:omarchy_calculator/src/features/history/state/state.dart';
 import 'package:omarchy_calculator/src/widgets/expression.dart';
+import 'package:url_launcher/url_launcher.dart';
 
 class HistoryScreen extends StatelessWidget {
   const HistoryScreen({super.key, required this.onSelect});
@@ -60,6 +61,19 @@ class HistoryScreen extends StatelessWidget {
                           ? notifier.clear
                           : null,
                       child: Text('Clear'),
+                    ),
+
+                    Spacer(),
+                    OmarchyButton(
+                      style: OmarchyButtonStyle.filled(AnsiColor.black),
+                      onPressed: () {
+                        launchUrl(
+                          Uri.parse(
+                            'https://github.com/aloisdeniel/omarchy_calculator',
+                          ),
+                        );
+                      },
+                      child: Icon(OmarchyIcons.mdGithub),
                     ),
                   ],
                 ),

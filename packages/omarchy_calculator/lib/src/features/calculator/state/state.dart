@@ -73,9 +73,10 @@ class CalculatorState {
   final CalcContext context;
 
   /// Whether the current state can delete the last command.
-  bool get canDelete => commands.isNotEmpty && !isResult;
+  bool get canDelete =>
+      commands.isNotEmpty && !isResult && tokens.last is! EqualsToken;
 
-  CalculatorState copyWith({int? id, String? input}) {
+  CalculatorState copyWith({int? id, String? input, List<Command>? commands}) {
     return CalculatorState(
       context: context,
       id: id ?? this.id,
@@ -85,7 +86,7 @@ class CalculatorState {
       result: result,
       dateTime: dateTime,
       isResult: isResult,
-      commands: commands,
+      commands: commands ?? this.commands,
     );
   }
 }

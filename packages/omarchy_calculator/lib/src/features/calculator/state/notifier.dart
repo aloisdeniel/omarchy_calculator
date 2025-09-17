@@ -27,7 +27,6 @@ class CalculatorNotifier extends ChangeNotifier {
     if (state.canDelete && action is ClearAll) {
       action = Command.backspace();
     }
-
     if (action is Memory) {
       switch (action) {
         case MemoryAdd():

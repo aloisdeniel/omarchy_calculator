@@ -4,6 +4,7 @@ import 'dart:math' as math;
 import 'package:calc_engine/calc_engine.dart';
 import 'package:flutter_omarchy/flutter_omarchy.dart';
 import 'package:omarchy_calculator/src/app.dart';
+import 'package:omarchy_calculator/src/commands.dart';
 import 'package:omarchy_calculator/src/features/calculator/state/event.dart';
 import 'package:omarchy_calculator/src/features/calculator/state/notifier.dart';
 import 'package:omarchy_calculator/src/features/config/state/config.dart';
@@ -11,10 +12,10 @@ import 'package:omarchy_calculator/src/features/config/state/config.dart';
 class ButtonGrid extends StatefulWidget {
   const ButtonGrid({
     super.key,
-
     required this.layouts,
     required this.selectedLayout,
     required this.onPressed,
+    required this.appCommands,
     this.spacing = 4.0,
     this.onOpenHistory,
   });
@@ -24,12 +25,14 @@ class ButtonGrid extends StatefulWidget {
   final int selectedLayout;
   final ValueChanged<Command> onPressed;
   final double spacing;
+  final Stream<AppCommand> appCommands;
 
   @override
   State<ButtonGrid> createState() => _ButtonGridState();
 }
 
 class _ButtonGridState extends State<ButtonGrid> {
+  late StreamSubscription<AppCommand> _appCommandsSubscription;
   late var selectedLayout = widget.selectedLayout;
 
   Iterable<List<Widget>> get rows sync* {
@@ -64,6 +67,43 @@ class _ButtonGridState extends State<ButtonGrid> {
         rowWidth = 0;
       }
     }
+  }
+
+  void _onAppCommand(AppCommand command) {
+    switch (command) {
+      case NextButtonLayoutCommand():
+        setState(() {
+          selectedLayout = (selectedLayout + 1) % widget.layouts.length;
+        });
+      case PreviousButtonLayoutCommand():
+        setState(() {
+          selectedLayout =
+              (selectedLayout - 1 + widget.layouts.length) %
+              widget.layouts.length;
+        });
+      default:
+    }
+  }
+
+  @override
+  void initState() {
+    super.initState();
+    _appCommandsSubscription = widget.appCommands.listen(_onAppCommand);
+  }
+
+  @override
+  void didUpdateWidget(covariant ButtonGrid oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (widget.appCommands != oldWidget.appCommands) {
+      _appCommandsSubscription.cancel();
+      _appCommandsSubscription = widget.appCommands.listen(_onAppCommand);
+    }
+  }
+
+  @override
+  void dispose() {
+    _appCommandsSubscription.cancel();
+    super.dispose();
   }
 
   @override

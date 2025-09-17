@@ -1,6 +1,6 @@
-import 'package:calc_engine/calc_engine.dart';
 import 'package:flutter_omarchy/flutter_omarchy.dart';
 import 'package:omarchy_calculator/src/app.dart';
+import 'package:omarchy_calculator/src/commands.dart';
 import 'package:omarchy_calculator/src/features/calculator/widgets/button_grid.dart';
 import 'package:omarchy_calculator/src/features/calculator/widgets/display.dart';
 import 'package:omarchy_calculator/src/features/config/state/config.dart';
@@ -10,10 +10,12 @@ class CalculatorScreen extends StatelessWidget {
     super.key,
     required this.layouts,
     required this.onOpenHistory,
+    required this.appCommands,
   });
 
   final VoidCallback? onOpenHistory;
   final List<ButtonLayout> layouts;
+  final Stream<AppCommand> appCommands;
 
   static const gridWidth = 400.0;
 
@@ -39,17 +41,10 @@ class CalculatorScreen extends StatelessWidget {
                   key: ValueKey((visibleGrids, i)),
                   child: ButtonGrid(
                     selectedLayout: 0,
+                    appCommands: appCommands,
                     layouts: layouts.toList(),
                     onOpenHistory: isLast ? onOpenHistory : null,
-                    onPressed: (action) {
-                      if (action case FunctionCommand(
-                        :final function,
-                      ) when function.startsWith('::')) {
-                        //TODO: Internal function
-                        return;
-                      }
-                      notifier.execute(action);
-                    },
+                    onPressed: notifier.execute,
                   ),
                 ),
               );
@@ -79,21 +74,5 @@ class CalculatorScreen extends StatelessWidget {
         );
       },
     );
-  }
-}
-
-class CommandIntent extends Intent {
-  const CommandIntent(this.command);
-  final Command command;
-}
-
-class CommandAction extends Action<CommandIntent> {
-  CommandAction(this.simulatedPress);
-
-  final Map<Command, SimulatedPressController> simulatedPress;
-
-  @override
-  void invoke(covariant CommandIntent intent) {
-    simulatedPress[intent.command]?.press();
   }
 }
