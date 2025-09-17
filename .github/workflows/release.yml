@@ -52,9 +52,11 @@ jobs:
 
       - name: Build Linux (release)
         run: |
-          build_name=${"${{ github.ref_name }}"#"v"}
+          tag="${{ github.ref_name }}"
+          build_name=${tag#"v"}
+          build_number="${{ github.run_id }}"
           cd packages/omarchy_calculator
-          flutter build linux --release --build-name $build_name --build-number ${{ github.run_id }} 
+          flutter build linux --release --build-name $build_name --build-number $build_number
 
       - name: Create archive
         run: |
