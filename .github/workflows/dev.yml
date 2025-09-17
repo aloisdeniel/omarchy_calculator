@@ -57,7 +57,7 @@ jobs:
       - name: Create archive
         run: |
           cd packages/omarchy_calculator/build/linux/${{ matrix.arch }}/release/bundle/
-          tar -czf omarchy_calculator-${{ github.ref_name }}-${{ matrix.arch }}.tar.gz omarchy_calculator
+          tar -czf omarchy_calculator-${{ github.ref_name }}-${{ matrix.arch }}.tar.gz omarchy_calculator lib data
           mv omarchy_calculator-${{ github.ref_name }}-${{ matrix.arch }}.tar.gz ../../../../../../../
 
       - name: Upload artifact
