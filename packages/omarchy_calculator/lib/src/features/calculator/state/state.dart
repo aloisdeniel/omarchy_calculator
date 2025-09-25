@@ -74,7 +74,10 @@ class CalculatorState {
 
   /// Whether the current state can delete the last command.
   bool get canDelete =>
-      commands.isNotEmpty && !isResult && tokens.last is! EqualsToken;
+      commands.isNotEmpty &&
+      !isResult &&
+      tokens.isNotEmpty &&
+      tokens.last is! EqualsToken;
 
   CalculatorState copyWith({int? id, String? input, List<Command>? commands}) {
     return CalculatorState(
